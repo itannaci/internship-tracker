@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Fieldbook — Internship Time Log</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EFEEE6;
+    --paper-raised:#F8F7F1;
+    --ink:#1C2430;
+    --ink-soft:#4A5361;
+    --line:#D9D6C9;
+    --stamp:#B5652B;
+    --stamp-dark:#8F4E20;
+    --teal:#2B6558;
+    --teal-dark:#204A41;
+    --danger:#A23B34;
+    --shadow: 0 1px 2px rgba(28,36,48,0.06), 0 8px 24px rgba(28,36,48,0.06);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  .mono{font-family:'JetBrains Mono',monospace;}
+  .display{font-family:'Space Grotesk',sans-serif;}
+
+  #app{
+    max-width:1040px;
+    margin:0 auto;
+    padding:28px 20px 80px;
+  }
+
+  /* ---------- Header ---------- */
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding-bottom:22px;
+    border-bottom:2px solid var(--ink);
+    margin-bottom:28px;
+  }
+  .brand{
+    display:flex;
+    align-items:baseline;
+    gap:10px;
+  }
+  .brand-mark{
+    width:34px;height:34px;
+    border:2px solid var(--ink);
+    border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;
+    font-size:15px;
+    flex-shrink:0;
+  }
+  .brand h1{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:22px;
+    font-weight:700;
+    margin:0;
+    letter-spacing:-0.01em;
+  }
+  .brand span.sub{
+    font-size:12px;
+    color:var(--ink-soft);
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+  }
+  .who{
+    text-align:right;
+    font-size:13px;
+    color:var(--ink-soft);
+  }
+  .who button{
+    background:none;border:none;
+    color:var(--ink);
+    text-decoration:underline;
+    cursor:pointer;
+    font-size:12px;
+    font-family:'Inter',sans-serif;
+    padding:0;
+    margin-left:8px;
+  }
+
+  /* ---------- Cards ---------- */
+  .card{
+    background:var(--paper-raised);
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:28px;
+    box-shadow:var(--shadow);
+  }
+  .card + .card{margin-top:18px;}
+
+  .eyebrow{
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.12em;
+    color:var(--ink-soft);
+    font-weight:600;
+    margin:0 0 6px;
+  }
+  h2.section-title{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:19px;
+    margin:0 0 18px;
+    font-weight:600;
+  }
+
+  /* ---------- Role select ---------- */
+  .role-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:18px;
+    max-width:640px;
+    margin:60px auto 0;
+  }
+  .role-card{
+    background:var(--paper-raised);
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:32px 24px;
+    text-align:left;
+    cursor:pointer;
+    transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+    box-shadow:var(--shadow);
+  }
+  .role-card:hover{
+    transform:translateY(-2px);
+    border-color:var(--ink);
+  }
+  .role-card .num{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    color:var(--stamp);
+    display:block;
+    margin-bottom:14px;
+  }
+  .role-card h3{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:20px;
+    margin:0 0 8px;
+  }
+  .role-card p{
+    font-size:13.5px;
+    color:var(--ink-soft);
+    margin:0;
+    line-height:1.5;
+  }
+
+  /* ---------- Forms ---------- */
+  label{
+    display:block;
+    font-size:12px;
+    font-weight:600;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    color:var(--ink-soft);
+    margin-bottom:6px;
+  }
+  .field{margin-bottom:16px;}
+  input[type="text"], input[type="password"], select{
+    width:100%;
+    padding:11px 12px;
+    border:1px solid var(--line);
+    border-radius:3px;
+    background:#fff;
+    font-size:14.5px;
+    font-family:'Inter',sans-serif;
+    color:var(--ink);
+  }
+  input:focus, select:focus, button:focus-visible{
+    outline:2px solid var(--stamp);
+    outline-offset:1px;
+  }
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:11px 20px;
+    border-radius:3px;
+    border:1px solid var(--ink);
+    background:var(--ink);
+    color:var(--paper-raised);
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:14px;
+    cursor:pointer;
+    transition:opacity .15s ease;
+  }
+  .btn:hover{opacity:0.85;}
+  .btn:disabled{opacity:0.4;cursor:not-allowed;}
+  .btn.ghost{
+    background:transparent;
+    color:var(--ink);
+  }
+  .btn.full{width:100%;}
+  .row{display:flex;gap:12px;}
+  .row > *{flex:1;}
+  .error-msg{
+    color:var(--danger);
+    font-size:13px;
+    margin-top:10px;
+  }
+  .hint{
+    font-size:12.5px;
+    color:var(--ink-soft);
+    margin-top:8px;
+    line-height:1.5;
+  }
+
+  /* ---------- Stamp button (signature element) ---------- */
+  .stamp-zone{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:36px 20px 24px;
+  }
+  .stamp-btn{
+    width:168px;height:168px;
+    border-radius:50%;
+    border:3px solid var(--ink);
+    background:var(--paper-raised);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    position:relative;
+    font-family:'Space Grotesk',sans-serif;
+    transition:transform .08s ease;
+  }
+  .stamp-btn.in{border-color:var(--teal); color:var(--teal-dark);}
+  .stamp-btn.out{border-color:var(--stamp); color:var(--stamp-dark);}
+  .stamp-btn:active{transform:scale(0.96);}
+  .stamp-btn:disabled{opacity:0.5;cursor:wait;}
+  .stamp-btn .verb{font-size:22px;font-weight:700;letter-spacing:-0.01em;}
+  .stamp-btn .noun{font-size:11px;text-transform:uppercase;letter-spacing:0.1em;margin-top:4px;color:var(--ink-soft);}
+  .stamp-btn .icon{font-size:30px;margin-bottom:6px;}
+
+  @keyframes thump{
+    0%{transform:scale(1) rotate(0deg);}
+    35%{transform:scale(0.86) rotate(-6deg);}
+    60%{transform:scale(1.05) rotate(2deg);}
+    100%{transform:scale(1) rotate(0deg);}
+  }
+  .stamp-btn.thump{animation:thump .45s ease;}
+
+  .stamp-result{
+    margin-top:18px;
+    text-align:center;
+    min-height:44px;
+  }
+  .stamp-result .status{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:600;
+    font-size:15px;
+  }
+  .stamp-result .coords{
+    font-size:12px;
+    color:var(--ink-soft);
+    margin-top:4px;
+  }
+
+  /* ---------- Internship picker ---------- */
+  .internship-picker{
+    display:flex;
+    gap:10px;
+    align-items:flex-end;
+    flex-wrap:wrap;
+  }
+  .internship-picker .field{flex:1;min-width:200px;margin-bottom:0;}
+
+  /* ---------- Ledger ---------- */
+  table.ledger{
+    width:100%;
+    border-collapse:collapse;
+    font-size:13px;
+  }
+  table.ledger th{
+    text-align:left;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    color:var(--ink-soft);
+    font-weight:600;
+    padding:8px 10px;
+    border-bottom:1px solid var(--ink);
+  }
+  table.ledger td{
+    padding:9px 10px;
+    border-bottom:1px dashed var(--line);
+    vertical-align:top;
+  }
+  table.ledger tr:last-child td{border-bottom:none;}
+  .tag{
+    display:inline-block;
+    padding:2px 8px;
+    border-radius:20px;
+    font-size:10.5px;
+    font-weight:600;
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+  }
+  .tag.in{background:rgba(43,101,88,0.12); color:var(--teal-dark);}
+  .tag.out{background:rgba(181,101,43,0.14); color:var(--stamp-dark);}
+  .empty-state{
+    text-align:center;
+    padding:30px 10px;
+    color:var(--ink-soft);
+    font-size:13.5px;
+  }
+
+  /* ---------- Admin filters/table ---------- */
+  .filter-bar{
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+    margin-bottom:20px;
+  }
+  .filter-bar .field{margin-bottom:0;min-width:160px;flex:1;}
+  .stat-strip{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));
+    gap:14px;
+    margin-bottom:22px;
+  }
+  .stat{
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:14px 16px;
+    background:var(--paper-raised);
+  }
+  .stat .num{font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:600;}
+  .stat .lbl{font-size:11px;text-transform:uppercase;color:var(--ink-soft);letter-spacing:0.06em;margin-top:2px;}
+  .table-scroll{overflow-x:auto;}
+
+  footer.notice{
+    margin-top:30px;
+    font-size:12px;
+    color:var(--ink-soft);
+    line-height:1.6;
+    border-top:1px solid var(--line);
+    padding-top:16px;
+  }
+
+  @media (max-width:640px){
+    .role-grid{grid-template-columns:1fr;}
+    .stat-strip{grid-template-columns:1fr 1fr;}
+    .row{flex-direction:column;}
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ============================================================
+  // Data lives behind a Netlify Function at /api/data (see
+  // netlify/functions/data.js in this project), which reads and writes
+  // a single JSON blob using Netlify Blobs storage. No config needed
+  // here — it just works once deployed on Netlify.
+  // ============================================================
+  const API_URL = "/api/data";
+  const PREVIEW_KEY = "fieldbook-tracker-preview";
+  const POLL_INTERVAL_MS = 8000;
+
+  let usingPreviewStorage = false; // true only when /api/data isn't reachable (e.g. previewing here in chat)
+
+  const ADMIN_PASSCODE = "supervise2026"; // demo-only gate, see notice in footer
+
+  let DATA = null;               // { students:{}, logs:[], programInternships:[] }
+  let session = null;            // { role:'student'|'admin', studentId, studentName, internshipId }
+  let loading = true;
+  let loadError = null;
+  let pollTimer = null;
+
+  function emptyData(){
+    return { students:{}, logs:[], programInternships:[] };
+  }
+  function normalize(d){
+    return {
+      students: (d && d.students) || {},
+      logs: (d && d.logs) || [],
+      programInternships: (d && d.programInternships) || []
+    };
+  }
+
+  // ---------- Netlify Function data layer ----------
+  async function loadFromApi(){
+    const res = await fetch(API_URL, { method: 'GET' });
+    if(!res.ok) throw new Error("API responded with " + res.status);
+    const d = await res.json();
+    DATA = normalize(d);
+  }
+
+  async function saveToApi(){
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(DATA)
+    });
+    if(!res.ok) throw new Error("API responded with " + res.status);
+  }
+
+  function startPolling(){
+    if(pollTimer) clearInterval(pollTimer);
+    pollTimer = setInterval(async () => {
+      // Skip while someone is actively typing so we don't clobber unsaved input.
+      const active = document.activeElement;
+      if(active && (active.tagName === 'INPUT' || active.tagName === 'SELECT')) return;
+      try{
+        await loadFromApi();
+        render();
+      }catch(e){ /* stay on last known-good data until the next successful poll */ }
+    }, POLL_INTERVAL_MS);
+  }
+
+  // ---------- Preview-mode data layer (Claude's artifact storage) ----------
+  // Only used here in chat when /api/data isn't reachable, so you can still
+  // click through the app before it's deployed. Not used once hosted on Netlify.
+  async function loadPreviewData(){
+    try{
+      const res = await window.storage.get(PREVIEW_KEY, true);
+      DATA = normalize(JSON.parse(res.value));
+    }catch(e){
+      DATA = emptyData();
+      try{ await window.storage.set(PREVIEW_KEY, JSON.stringify(DATA), true); }catch(e2){}
+    }
+  }
+
+  async function saveData(){
+    try{
+      if(usingPreviewStorage){
+        await window.storage.set(PREVIEW_KEY, JSON.stringify(DATA), true);
+      } else {
+        await saveToApi();
+      }
+      return true;
+    }catch(e){
+      return false;
+    }
+  }
+
+  function uid(prefix){
+    return prefix + "_" + Math.random().toString(36).slice(2,10) + Date.now().toString(36);
+  }
+  function slugId(str){
+    return str.trim().toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,"");
+  }
+  function fmtDateTime(iso){
+    const d = new Date(iso);
+    return d.toLocaleString(undefined,{ month:'short', day:'numeric', year:'numeric', hour:'2-digit', minute:'2-digit' });
+  }
+  function fmtCoord(n){
+    return (typeof n === 'number') ? n.toFixed(5) : "—";
+  }
+
+  function formatDuration(hours){
+    if(hours === null || hours === undefined) return "In progress";
+    const h = Math.floor(hours);
+    const m = Math.round((hours - h) * 60);
+    if(m === 60) return (h+1) + "h 0m";
+    return h + "h " + m + "m";
+  }
+
+  // Pairs each clock-in with the next clock-out for the same student + internship
+  // to produce completed sessions with a duration in hours.
+  function computeSessions(){
+    const groups = {};
+    DATA.logs.forEach(l => {
+      const key = l.studentId + "|" + l.internshipId;
+      if(!groups[key]) groups[key] = [];
+      groups[key].push(l);
+    });
+    const sessions = [];
+    Object.values(groups).forEach(arr => {
+      arr.sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
+      let pending = null;
+      arr.forEach(l => {
+        if(l.type === 'in'){
+          pending = l;
+        } else if(l.type === 'out'){
+          if(pending){
+            const inTime = new Date(pending.timestamp);
+            const outTime = new Date(l.timestamp);
+            sessions.push({
+              studentId: l.studentId,
+              internshipId: l.internshipId,
+              internshipName: l.internshipName,
+              internshipOrg: l.internshipOrg,
+              inTime: pending.timestamp,
+              outTime: l.timestamp,
+              hours: (outTime - inTime) / 3600000
+            });
+            pending = null;
+          }
+        }
+      });
+      if(pending){
+        sessions.push({
+          studentId: pending.studentId,
+          internshipId: pending.internshipId,
+          internshipName: pending.internshipName,
+          internshipOrg: pending.internshipOrg,
+          inTime: pending.timestamp,
+          outTime: null,
+          hours: null
+        });
+      }
+    });
+    return sessions;
+  }
+
+  function getGeolocation(){
+    return new Promise((resolve)=>{
+      if(!('geolocation' in navigator)){
+        resolve({ ok:false, error:"Geolocation not supported by this browser." });
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        (pos)=> resolve({
+          ok:true,
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+          accuracy: pos.coords.accuracy
+        }),
+        (err)=> resolve({ ok:false, error: err.message || "Location permission denied." }),
+        { enableHighAccuracy:true, timeout:10000, maximumAge:0 }
+      );
+    });
+  }
+
+  // ---------- render root ----------
+  function render(){
+    const app = document.getElementById('app');
+    if(loading){
+      app.innerHTML = `<div style="padding:80px 0;text-align:center;color:var(--ink-soft);">Opening the logbook…</div>`;
+      return;
+    }
+    if(loadError){
+      app.innerHTML = `<div class="card" style="max-width:560px;margin:60px auto 0;">
+        <p class="eyebrow">Connection problem</p>
+        <h2 class="section-title">Couldn't reach the data function</h2>
+        <p class="hint" style="margin:0 0 10px;">${escapeHtml(loadError)}</p>
+        <p class="hint" style="margin:0;">Make sure this site was deployed with its <code>netlify/functions/data.js</code> function and that <code>@netlify/blobs</code> was installed (run <code>npm install</code> before deploying). If you're testing this file outside of Netlify hosting, that's expected — Netlify Functions only run once the site is deployed on Netlify.</p>
+      </div>`;
+      return;
+    }
+    let html = renderHeader();
+    if(usingPreviewStorage){
+      html += `<div class="card" style="border-color:var(--stamp);margin-bottom:18px;padding:16px 20px;">
+        <p style="margin:0;font-size:13px;color:var(--stamp-dark);"><strong>Preview mode.</strong> The <code>/api/data</code> function isn't reachable here, so you're testing with Claude's built-in storage instead. Data here won't carry over — once this is deployed on Netlify with its function, it'll connect automatically.</p>
+      </div>`;
+    }
+    if(!session){
+      html += renderRoleSelect();
+    } else if(session.role === 'student'){
+      html += renderStudent();
+    } else if(session.role === 'admin'){
+      html += renderAdmin();
+    }
+    html += renderFooter();
+    app.innerHTML = html;
+    attachHandlers();
+  }
+
+  function renderHeader(){
+    let whoBlock = '';
+    if(session && session.role === 'student'){
+      whoBlock = `<div class="who">Signed in as <strong>${escapeHtml(session.studentName)}</strong><button id="btn-signout">Switch user</button></div>`;
+    } else if(session && session.role === 'admin'){
+      whoBlock = `<div class="who">Program admin view<button id="btn-signout">Switch user</button></div>`;
+    } else {
+      whoBlock = `<div class="who">Not signed in</div>`;
+    }
+    return `
+    <div class="topbar">
+      <div class="brand">
+        <div class="brand-mark">FB</div>
+        <div>
+          <h1>Fieldbook</h1>
+          <span class="sub">Internship time &amp; location log</span>
+        </div>
+      </div>
+      ${whoBlock}
+    </div>`;
+  }
+
+  function renderFooter(){
+    return `<footer class="notice">
+      This copy talks to a Netlify Function backed by Netlify Blobs storage, so it works from any device, any domain —
+      not just inside Claude. Records refresh automatically every few seconds. The admin passcode is still a simple
+      shared code rather than real authentication, and by default anyone who can reach <code>/api/data</code> can read
+      or write it. Add real login and lock down the function before using this with real student data.
+    </footer>`;
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  // ---------- role select ----------
+  function renderRoleSelect(){
+    return `
+    <div class="role-grid">
+      <div class="role-card" id="role-student">
+        <span class="num mono">01</span>
+        <h3>I'm interning</h3>
+        <p>Clock in and out of your placement. Your name, internship, and location get stamped into the log automatically.</p>
+      </div>
+      <div class="role-card" id="role-admin">
+        <span class="num mono">02</span>
+        <h3>I run the program</h3>
+        <p>Review every student's time log across all internships, filter by date or site, and export the records.</p>
+      </div>
+    </div>`;
+  }
+
+  // ---------- student flow ----------
+  function renderStudent(){
+    if(!session.studentId){
+      return renderStudentIdentify();
+    }
+    const student = DATA.students[session.studentId];
+    if(!session.internshipId){
+      return renderInternshipPicker(student);
+    }
+    return renderStudentDashboard(student);
+  }
+
+  function renderStudentIdentify(){
+    return `
+    <div class="card" style="max-width:480px;margin:20px auto 0;">
+      <p class="eyebrow">Step 1 of 2</p>
+      <h2 class="section-title">Who's clocking in?</h2>
+      <div class="field">
+        <label for="in-name">Full name</label>
+        <input type="text" id="in-name" placeholder="e.g. Jordan Alvarez">
+      </div>
+      <div class="field">
+        <label for="in-sid">Student ID or school email</label>
+        <input type="text" id="in-sid" placeholder="e.g. jalvarez@school.edu">
+      </div>
+      <div id="identify-error" class="error-msg"></div>
+      <button class="btn full" id="btn-identify">Continue</button>
+    </div>`;
+  }
+
+  function renderInternshipPicker(student){
+    const list = DATA.programInternships;
+    if(!list.length){
+      return `
+      <div class="card" style="max-width:480px;margin:20px auto 0;">
+        <p class="eyebrow">Step 2 of 2 · ${escapeHtml(student.name)}</p>
+        <h2 class="section-title">No internships set up yet</h2>
+        <p class="hint" style="margin:0;">Your program admin hasn't added any internships to choose from. Check back once they've set the list up.</p>
+      </div>`;
+    }
+    const options = list.map(i =>
+      `<option value="${i.id}">${escapeHtml(i.name)}${i.org ? " — "+escapeHtml(i.org) : ""}</option>`
+    ).join("");
+    return `
+    <div class="card" style="max-width:480px;margin:20px auto 0;">
+      <p class="eyebrow">Step 2 of 2 · ${escapeHtml(student.name)}</p>
+      <h2 class="section-title">Which internship are you part of?</h2>
+      <div class="field">
+        <label for="sel-internship">Internship</label>
+        <select id="sel-internship">
+          <option value="">— Choose one —</option>
+          ${options}
+        </select>
+      </div>
+      <div id="internship-error" class="error-msg"></div>
+      <button class="btn full" id="btn-pick-internship">Continue</button>
+    </div>`;
+  }
+
+  function renderStudentDashboard(student){
+    const internship = DATA.programInternships.find(i => i.id === session.internshipId);
+    if(!internship){
+      session.internshipId = null;
+      return renderInternshipPicker(student);
+    }
+    const myLogs = DATA.logs
+      .filter(l => l.studentId === student.id && l.internshipId === internship.id)
+      .sort((a,b)=> new Date(b.timestamp) - new Date(a.timestamp));
+    const last = myLogs[0];
+    const nextAction = (!last || last.type === 'out') ? 'in' : 'out';
+    const myHours = computeSessions()
+      .filter(s => s.studentId === student.id && s.internshipId === internship.id && s.hours != null)
+      .reduce((sum,s) => sum + s.hours, 0);
+
+    const rows = myLogs.slice(0,25).map(l => `
+      <tr>
+        <td class="mono">${fmtDateTime(l.timestamp)}</td>
+        <td><span class="tag ${l.type}">${l.type === 'in' ? 'Clock in' : 'Clock out'}</span></td>
+        <td class="mono">${l.geo && l.geo.ok ? fmtCoord(l.geo.lat)+", "+fmtCoord(l.geo.lng) : "No location"}</td>
+      </tr>`).join("");
+
+    return `
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;">
+        <div>
+          <p class="eyebrow">${escapeHtml(student.name)}</p>
+          <h2 class="section-title" style="margin-bottom:0;">${escapeHtml(internship.name)}${internship.org ? " · "+escapeHtml(internship.org) : ""}</h2>
+        </div>
+        <button class="btn ghost" id="btn-switch-internship">Switch internship</button>
+      </div>
+
+      <div class="stamp-zone">
+        <button class="stamp-btn ${nextAction}" id="btn-stamp" data-action="${nextAction}">
+          <span class="icon">${nextAction === 'in' ? '→' : '←'}</span>
+          <span class="verb">Clock ${nextAction === 'in' ? 'In' : 'Out'}</span>
+          <span class="noun">tap to stamp</span>
+        </button>
+        <div class="stamp-result" id="stamp-result">
+          ${last ? `<div class="status">Last stamp: ${last.type === 'in' ? 'Clocked in' : 'Clocked out'} at ${fmtDateTime(last.timestamp)}</div>` : `<div class="status">No entries yet — this will be your first stamp.</div>`}
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;">
+        <h2 class="section-title" style="margin-bottom:0;">Your recent log</h2>
+        <span class="hint" style="margin:0;">Total logged: <strong class="mono" style="color:var(--ink);">${formatDuration(myHours)}</strong></span>
+      </div>
+      <div style="height:14px;"></div>
+      ${myLogs.length ? `
+      <div class="table-scroll">
+      <table class="ledger">
+        <thead><tr><th>Timestamp</th><th>Action</th><th>Location</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      </div>` : `<div class="empty-state">Nothing logged yet for this internship.</div>`}
+    </div>`;
+  }
+
+  // ---------- admin flow ----------
+  function renderAdmin(){
+    if(!session.authed){
+      return `
+      <div class="card" style="max-width:420px;margin:20px auto 0;">
+        <p class="eyebrow">Program admin</p>
+        <h2 class="section-title">Enter passcode</h2>
+        <div class="field">
+          <label for="admin-pass">Passcode</label>
+          <input type="password" id="admin-pass" placeholder="••••••••">
+        </div>
+        <div id="admin-error" class="error-msg"></div>
+        <button class="btn full" id="btn-admin-login">View records</button>
+      </div>`;
+    }
+
+    const students = Object.values(DATA.students);
+    const allInternships = DATA.programInternships;
+
+    const filterStudent = session.filterStudent || "";
+    const filterInternship = session.filterInternship || "";
+    const filterFrom = session.filterFrom || "";
+    const filterTo = session.filterTo || "";
+
+    let logs = DATA.logs.slice();
+    if(filterStudent) logs = logs.filter(l => l.studentId === filterStudent);
+    if(filterInternship) logs = logs.filter(l => l.internshipId === filterInternship);
+    if(filterFrom) logs = logs.filter(l => new Date(l.timestamp) >= new Date(filterFrom));
+    if(filterTo) logs = logs.filter(l => new Date(l.timestamp) <= new Date(filterTo+"T23:59:59"));
+    logs.sort((a,b)=> new Date(b.timestamp) - new Date(a.timestamp));
+
+    const totalIns = DATA.logs.filter(l=>l.type==='in').length;
+    const totalOuts = DATA.logs.filter(l=>l.type==='out').length;
+
+    const studentOptions = students.map(s => `<option value="${s.id}" ${s.id===filterStudent?'selected':''}>${escapeHtml(s.name)}</option>`).join("");
+    const internshipOptions = allInternships.map(i => `<option value="${i.id}" ${i.id===filterInternship?'selected':''}>${escapeHtml(i.name)}${i.org?" — "+escapeHtml(i.org):""}</option>`).join("");
+
+    const rows = logs.slice(0,300).map(l => {
+      const student = DATA.students[l.studentId];
+      return `
+      <tr>
+        <td class="mono">${fmtDateTime(l.timestamp)}</td>
+        <td>${student ? escapeHtml(student.name) : "—"}</td>
+        <td>${escapeHtml(l.internshipName)}${l.internshipOrg ? " · "+escapeHtml(l.internshipOrg) : ""}</td>
+        <td><span class="tag ${l.type}">${l.type==='in'?'In':'Out'}</span></td>
+        <td class="mono">${l.geo && l.geo.ok ? fmtCoord(l.geo.lat)+", "+fmtCoord(l.geo.lng) : "No location"}</td>
+        <td class="mono">${l.geo && l.geo.ok ? Math.round(l.geo.accuracy)+"m" : "—"}</td>
+      </tr>`;
+    }).join("");
+
+    const internshipRows = allInternships.map(i => `
+      <tr>
+        <td>${escapeHtml(i.name)}</td>
+        <td>${i.org ? escapeHtml(i.org) : "—"}</td>
+        <td style="text-align:right;"><button class="btn ghost btn-remove-internship" data-id="${i.id}" style="padding:5px 12px;font-size:12.5px;">Remove</button></td>
+      </tr>`).join("");
+
+    // ---- hours summary: pair clock-ins with clock-outs, apply the same filters ----
+    let sessions = computeSessions();
+    if(filterStudent) sessions = sessions.filter(s => s.studentId === filterStudent);
+    if(filterInternship) sessions = sessions.filter(s => s.internshipId === filterInternship);
+    if(filterFrom) sessions = sessions.filter(s => new Date(s.inTime) >= new Date(filterFrom));
+    if(filterTo) sessions = sessions.filter(s => new Date(s.inTime) <= new Date(filterTo+"T23:59:59"));
+    sessions.sort((a,b) => new Date(b.inTime) - new Date(a.inTime));
+
+    const totalHoursAll = sessions.reduce((sum,s) => sum + (s.hours || 0), 0);
+
+    const studentTotals = {};
+    sessions.forEach(s => { if(s.hours != null) studentTotals[s.studentId] = (studentTotals[s.studentId] || 0) + s.hours; });
+    const studentTotalsArr = Object.entries(studentTotals)
+      .map(([sid,hrs]) => ({ sid, hrs }))
+      .sort((a,b) => b.hrs - a.hrs);
+
+    const internshipTotals = {};
+    sessions.forEach(s => {
+      if(s.hours == null) return;
+      if(!internshipTotals[s.internshipId]) internshipTotals[s.internshipId] = { name: s.internshipName, org: s.internshipOrg, hrs: 0 };
+      internshipTotals[s.internshipId].hrs += s.hours;
+    });
+    const internshipTotalsArr = Object.entries(internshipTotals)
+      .map(([id,v]) => ({ id, ...v }))
+      .sort((a,b) => b.hrs - a.hrs);
+
+    const sessionRows = sessions.slice(0,300).map(s => {
+      const student = DATA.students[s.studentId];
+      return `
+      <tr>
+        <td>${student ? escapeHtml(student.name) : "—"}</td>
+        <td>${escapeHtml(s.internshipName)}${s.internshipOrg ? " · "+escapeHtml(s.internshipOrg) : ""}</td>
+        <td class="mono">${fmtDateTime(s.inTime)}</td>
+        <td class="mono">${s.outTime ? fmtDateTime(s.outTime) : "—"}</td>
+        <td class="mono">${formatDuration(s.hours)}</td>
+      </tr>`;
+    }).join("");
+
+    const studentTotalRows = studentTotalsArr.map(t => {
+      const student = DATA.students[t.sid];
+      return `<tr><td>${student ? escapeHtml(student.name) : "—"}</td><td class="mono">${formatDuration(t.hrs)}</td></tr>`;
+    }).join("");
+
+    const internshipTotalRows = internshipTotalsArr.map(t =>
+      `<tr><td>${escapeHtml(t.name)}${t.org ? " · "+escapeHtml(t.org) : ""}</td><td class="mono">${formatDuration(t.hrs)}</td></tr>`
+    ).join("");
+
+    return `
+    <div class="card">
+      <h2 class="section-title">Manage internships</h2>
+      <p class="hint" style="margin:0 0 16px;">This is the list interns choose from when they clock in. Add every internship your program is running this term.</p>
+      ${allInternships.length ? `
+      <div class="table-scroll" style="margin-bottom:20px;">
+      <table class="ledger">
+        <thead><tr><th>Name</th><th>Organization</th><th></th></tr></thead>
+        <tbody>${internshipRows}</tbody>
+      </table>
+      </div>` : `<div class="empty-state" style="margin-bottom:20px;">No internships added yet — create the first one below.</div>`}
+      <div class="row">
+        <div class="field">
+          <label for="new-pi-name">Internship name</label>
+          <input type="text" id="new-pi-name" placeholder="e.g. Summer Marketing Internship">
+        </div>
+        <div class="field">
+          <label for="new-pi-org">Organization (optional)</label>
+          <input type="text" id="new-pi-org" placeholder="e.g. Riverside Nonprofit Co.">
+        </div>
+      </div>
+      <div id="program-internship-error" class="error-msg"></div>
+      <button class="btn" id="btn-add-program-internship">Add internship</button>
+    </div>
+
+    <div class="card">
+      <h2 class="section-title">Program overview</h2>
+      <div class="stat-strip">
+        <div class="stat"><div class="num mono">${students.length}</div><div class="lbl">Students</div></div>
+        <div class="stat"><div class="num mono">${allInternships.length}</div><div class="lbl">Internships</div></div>
+        <div class="stat"><div class="num mono">${totalIns}</div><div class="lbl">Clock-ins</div></div>
+        <div class="stat"><div class="num mono">${totalOuts}</div><div class="lbl">Clock-outs</div></div>
+        <div class="stat"><div class="num mono">${formatDuration(totalHoursAll)}</div><div class="lbl">Hours logged</div></div>
+      </div>
+
+      <div class="filter-bar">
+        <div class="field">
+          <label for="f-student">Student</label>
+          <select id="f-student"><option value="">All students</option>${studentOptions}</select>
+        </div>
+        <div class="field">
+          <label for="f-internship">Internship</label>
+          <select id="f-internship"><option value="">All internships</option>${internshipOptions}</select>
+        </div>
+        <div class="field">
+          <label for="f-from">From</label>
+          <input type="text" id="f-from" placeholder="YYYY-MM-DD" value="${filterFrom}">
+        </div>
+        <div class="field">
+          <label for="f-to">To</label>
+          <input type="text" id="f-to" placeholder="YYYY-MM-DD" value="${filterTo}">
+        </div>
+      </div>
+      <p class="hint" style="margin:0;">These filters apply to the hours summary and the raw activity log below.</p>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:10px;">
+        <h2 class="section-title" style="margin-bottom:0;">Hours summary</h2>
+        <button class="btn" id="btn-export-summary">Download hours summary (CSV)</button>
+      </div>
+      <p class="hint" style="margin:0 0 18px;">Each row pairs a clock-in with its next clock-out for the same intern and internship. An entry still open shows as "In progress" and isn't counted in the totals yet.</p>
+
+      <h3 style="font-family:'Space Grotesk',sans-serif;font-size:14.5px;margin:0 0 10px;">Entries</h3>
+      ${sessions.length ? `
+      <div class="table-scroll" style="margin-bottom:24px;">
+      <table class="ledger">
+        <thead><tr><th>Student</th><th>Internship</th><th>Clock in</th><th>Clock out</th><th>Hours</th></tr></thead>
+        <tbody>${sessionRows}</tbody>
+      </table>
+      </div>` : `<div class="empty-state" style="margin-bottom:24px;">No completed entries match these filters yet.</div>`}
+
+      <div class="row" style="align-items:flex-start;">
+        <div>
+          <h3 style="font-family:'Space Grotesk',sans-serif;font-size:14.5px;margin:0 0 10px;">Total hours by student</h3>
+          ${studentTotalsArr.length ? `
+          <table class="ledger">
+            <thead><tr><th>Student</th><th>Total hours</th></tr></thead>
+            <tbody>${studentTotalRows}</tbody>
+          </table>` : `<div class="empty-state">No totals yet.</div>`}
+        </div>
+        <div>
+          <h3 style="font-family:'Space Grotesk',sans-serif;font-size:14.5px;margin:0 0 10px;">Total hours by internship</h3>
+          ${internshipTotalsArr.length ? `
+          <table class="ledger">
+            <thead><tr><th>Internship</th><th>Total hours</th></tr></thead>
+            <tbody>${internshipTotalRows}</tbody>
+          </table>` : `<div class="empty-state">No totals yet.</div>`}
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+        <h2 class="section-title" style="margin-bottom:0;">Raw activity log</h2>
+        <button class="btn ghost" id="btn-export">Download raw log (CSV)</button>
+      </div>
+      <p class="hint" style="margin:0 0 14px;">Showing ${Math.min(logs.length,300)} of ${logs.length} matching clock-in/out events.</p>
+
+      ${logs.length ? `
+      <div class="table-scroll">
+      <table class="ledger">
+        <thead><tr><th>Timestamp</th><th>Student</th><th>Internship</th><th>Action</th><th>Coordinates</th><th>Accuracy</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      </div>` : `<div class="empty-state">No entries match these filters yet.</div>`}
+    </div>`;
+  }
+
+  // ---------- event wiring ----------
+  function attachHandlers(){
+    const $ = (id) => document.getElementById(id);
+
+    if($('role-student')) $('role-student').onclick = () => { session = {role:'student'}; render(); };
+    if($('role-admin')) $('role-admin').onclick = () => { session = {role:'admin', authed:false}; render(); };
+    if($('btn-signout')) $('btn-signout').onclick = () => { session = null; render(); };
+
+    if($('btn-identify')) $('btn-identify').onclick = () => {
+      const name = $('in-name').value.trim();
+      const sidRaw = $('in-sid').value.trim();
+      if(!name || !sidRaw){
+        $('identify-error').textContent = "Enter both your name and a student ID or email.";
+        return;
+      }
+      const sid = slugId(sidRaw);
+      if(!DATA.students[sid]){
+        DATA.students[sid] = { id: sid, name, rawId: sidRaw, internships: [] };
+        saveData();
+      } else {
+        DATA.students[sid].name = name; // keep name current
+        saveData();
+      }
+      session.studentId = sid;
+      session.studentName = name;
+      render();
+    };
+
+    if($('btn-pick-internship')) $('btn-pick-internship').onclick = () => {
+      const val = $('sel-internship').value;
+      if(!val){
+        $('internship-error').textContent = "Choose an internship from the list.";
+        return;
+      }
+      session.internshipId = val;
+      render();
+    };
+
+    if($('btn-add-program-internship')) $('btn-add-program-internship').onclick = () => {
+      const name = $('new-pi-name').value.trim();
+      const org = $('new-pi-org').value.trim();
+      if(!name){
+        $('program-internship-error').textContent = "Give this internship a name.";
+        return;
+      }
+      DATA.programInternships.push({ id: uid('int'), name, org });
+      saveData();
+      $('new-pi-name').value = "";
+      $('new-pi-org').value = "";
+      render();
+    };
+
+    document.querySelectorAll('.btn-remove-internship').forEach(btn => {
+      btn.onclick = () => {
+        const id = btn.dataset.id;
+        const inUse = DATA.logs.some(l => l.internshipId === id);
+        if(inUse && !confirm("This internship already has log entries against it. Remove it from the list anyway? Past logs will keep showing its name.")){
+          return;
+        }
+        DATA.programInternships = DATA.programInternships.filter(i => i.id !== id);
+        saveData();
+        render();
+      };
+    });
+
+    if($('btn-switch-internship')) $('btn-switch-internship').onclick = () => {
+      session.internshipId = null;
+      render();
+    };
+
+    if($('btn-stamp')) $('btn-stamp').onclick = async () => {
+      const btn = $('btn-stamp');
+      const action = btn.dataset.action;
+      btn.disabled = true;
+      const resultBox = $('stamp-result');
+      resultBox.innerHTML = `<div class="status">Getting your location…</div>`;
+      const geo = await getGeolocation();
+      const student = DATA.students[session.studentId];
+      const internship = DATA.programInternships.find(i => i.id === session.internshipId);
+      const entry = {
+        id: uid('log'),
+        studentId: student.id,
+        internshipId: internship.id,
+        internshipName: internship.name,
+        internshipOrg: internship.org || "",
+        type: action,
+        timestamp: new Date().toISOString(),
+        geo: geo
+      };
+      DATA.logs.push(entry);
+      const ok = await saveData();
+      btn.classList.add('thump');
+      setTimeout(()=> btn.classList.remove('thump'), 450);
+      if(!ok){
+        resultBox.innerHTML = `<div class="status">Saved locally, but syncing failed — try again if you're offline.</div>`;
+      }
+      render();
+    };
+
+    if($('btn-admin-login')) $('btn-admin-login').onclick = () => {
+      const val = $('admin-pass').value;
+      if(val === ADMIN_PASSCODE){
+        session.authed = true;
+        render();
+      } else {
+        $('admin-error').textContent = "That passcode doesn't match.";
+      }
+    };
+
+    if($('f-student')) $('f-student').onchange = (e) => { session.filterStudent = e.target.value; render(); };
+    if($('f-internship')) $('f-internship').onchange = (e) => { session.filterInternship = e.target.value; render(); };
+    if($('f-from')) $('f-from').onblur = (e) => { session.filterFrom = e.target.value; render(); };
+    if($('f-to')) $('f-to').onblur = (e) => { session.filterTo = e.target.value; render(); };
+
+    if($('btn-export')) $('btn-export').onclick = exportCsv;
+    if($('btn-export-summary')) $('btn-export-summary').onclick = exportSummaryCsv;
+  }
+
+  function exportCsv(){
+    const filterStudent = session.filterStudent || "";
+    const filterInternship = session.filterInternship || "";
+    const filterFrom = session.filterFrom || "";
+    const filterTo = session.filterTo || "";
+
+    let logs = DATA.logs.slice();
+    if(filterStudent) logs = logs.filter(l => l.studentId === filterStudent);
+    if(filterInternship) logs = logs.filter(l => l.internshipId === filterInternship);
+    if(filterFrom) logs = logs.filter(l => new Date(l.timestamp) >= new Date(filterFrom));
+    if(filterTo) logs = logs.filter(l => new Date(l.timestamp) <= new Date(filterTo+"T23:59:59"));
+    logs.sort((a,b)=> new Date(a.timestamp) - new Date(b.timestamp));
+
+    const header = ["Timestamp","Student Name","Student ID","Internship","Organization","Action","Latitude","Longitude","Accuracy (m)"];
+    const rows = logs.map(l => {
+      const student = DATA.students[l.studentId] || {};
+      return [
+        l.timestamp,
+        student.name || "",
+        student.rawId || l.studentId,
+        l.internshipName,
+        l.internshipOrg || "",
+        l.type,
+        (l.geo && l.geo.ok) ? l.geo.lat : "",
+        (l.geo && l.geo.ok) ? l.geo.lng : "",
+        (l.geo && l.geo.ok) ? Math.round(l.geo.accuracy) : ""
+      ];
+    });
+    const csvEscape = (v) => {
+      const s = String(v);
+      return /[",\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s;
+    };
+    const csv = [header, ...rows].map(r => r.map(csvEscape).join(",")).join("\n");
+    const blob = new Blob([csv], {type:"text/csv;charset=utf-8;"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = "internship-time-log-" + new Date().toISOString().slice(0,10) + ".csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function exportSummaryCsv(){
+    const filterStudent = session.filterStudent || "";
+    const filterInternship = session.filterInternship || "";
+    const filterFrom = session.filterFrom || "";
+    const filterTo = session.filterTo || "";
+
+    let sessions = computeSessions();
+    if(filterStudent) sessions = sessions.filter(s => s.studentId === filterStudent);
+    if(filterInternship) sessions = sessions.filter(s => s.internshipId === filterInternship);
+    if(filterFrom) sessions = sessions.filter(s => new Date(s.inTime) >= new Date(filterFrom));
+    if(filterTo) sessions = sessions.filter(s => new Date(s.inTime) <= new Date(filterTo+"T23:59:59"));
+    sessions.sort((a,b) => new Date(a.inTime) - new Date(b.inTime));
+
+    const csvEscape = (v) => {
+      const s = String(v);
+      return /[",\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s;
+    };
+    const toRow = (arr) => arr.map(csvEscape).join(",");
+
+    const lines = [];
+    lines.push(toRow(["Entries"]));
+    lines.push(toRow(["Student","Student ID","Internship","Organization","Clock in","Clock out","Hours"]));
+    sessions.forEach(s => {
+      const student = DATA.students[s.studentId] || {};
+      lines.push(toRow([
+        student.name || "",
+        student.rawId || s.studentId,
+        s.internshipName,
+        s.internshipOrg || "",
+        s.inTime,
+        s.outTime || "",
+        s.hours != null ? s.hours.toFixed(2) : "in progress"
+      ]));
+    });
+
+    const studentTotals = {};
+    sessions.forEach(s => { if(s.hours != null) studentTotals[s.studentId] = (studentTotals[s.studentId] || 0) + s.hours; });
+    lines.push(toRow([]));
+    lines.push(toRow(["Total hours by student"]));
+    lines.push(toRow(["Student","Student ID","Total hours"]));
+    Object.entries(studentTotals)
+      .sort((a,b) => b[1]-a[1])
+      .forEach(([sid,hrs]) => {
+        const student = DATA.students[sid] || {};
+        lines.push(toRow([student.name || "", student.rawId || sid, hrs.toFixed(2)]));
+      });
+
+    const internshipTotals = {};
+    sessions.forEach(s => {
+      if(s.hours == null) return;
+      if(!internshipTotals[s.internshipId]) internshipTotals[s.internshipId] = { name: s.internshipName, org: s.internshipOrg, hrs: 0 };
+      internshipTotals[s.internshipId].hrs += s.hours;
+    });
+    lines.push(toRow([]));
+    lines.push(toRow(["Total hours by internship"]));
+    lines.push(toRow(["Internship","Organization","Total hours"]));
+    Object.values(internshipTotals)
+      .sort((a,b) => b.hrs-a.hrs)
+      .forEach(v => lines.push(toRow([v.name, v.org || "", v.hrs.toFixed(2)])));
+
+    const csv = lines.join("\n");
+    const blob = new Blob([csv], {type:"text/csv;charset=utf-8;"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = "internship-hours-summary-" + new Date().toISOString().slice(0,10) + ".csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  // ---------- boot ----------
+  (async function boot(){
+    try{
+      await loadFromApi();
+      loading = false;
+      startPolling();
+    }catch(apiErr){
+      if(typeof window.storage !== 'undefined'){
+        usingPreviewStorage = true;
+        await loadPreviewData();
+        loading = false;
+      } else {
+        loadError = apiErr.message || "Couldn't reach /api/data.";
+        loading = false;
+      }
+    }
+    render();
+  })();
+
+})();
+</script>
+</body>
+</html>

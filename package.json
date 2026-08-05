@@ -1,0 +1,9 @@
+{
+  "name": "fieldbook-tracker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Internship time & location tracker with a Netlify Functions + Netlify Blobs backend",
+  "dependencies": {
+    "@netlify/blobs": "^8.1.0"
+  }
+}
