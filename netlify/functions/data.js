@@ -12,9 +12,17 @@ exports.handler = async (event) => {
     // loosen this only if you need to call the API from a different origin.
   };
 
-  const store = getStore("fieldbook");
-
   try {
+    // Netlify auto-injects blobs credentials for sites deployed via Git-based
+    // continuous deployment. Manual/CLI deploys don't get that context, so we
+    // fall back to explicit siteID + token (set BLOBS_SITE_ID / BLOBS_TOKEN in
+    // the site's environment variables) if those are present.
+    const storeOptions =
+      process.env.BLOBS_SITE_ID && process.env.BLOBS_TOKEN
+        ? { name: "fieldbook", siteID: process.env.BLOBS_SITE_ID, token: process.env.BLOBS_TOKEN }
+        : "fieldbook";
+    const store = getStore(storeOptions);
+
     if (event.httpMethod === "GET") {
       const data = (await store.get("data", { type: "json" })) || EMPTY_DATA;
       return { statusCode: 200, headers, body: JSON.stringify(data) };
