@@ -457,15 +457,6 @@
   .stat .lbl{font-size:11px;text-transform:uppercase;color:var(--ink-soft);letter-spacing:0.06em;margin-top:2px;}
   .table-scroll{overflow-x:auto;}
 
-  footer.notice{
-    margin-top:30px;
-    font-size:12px;
-    color:var(--ink-soft);
-    line-height:1.6;
-    border-top:1px solid var(--line);
-    padding-top:16px;
-  }
-
   @media (max-width:640px){
     .stat-strip{grid-template-columns:1fr 1fr;}
     .row{flex-direction:column;}
@@ -492,7 +483,7 @@
   let usingPreviewStorage = false; // true only when /api/data isn't reachable (e.g. previewing here in chat)
   let usingLocalStorage = false;   // true when /api/data isn't reachable and we're in a plain browser (local file testing)
 
-  const ADMIN_PASSCODE = "supervise2026"; // demo-only gate, see notice in footer
+  const ADMIN_PASSCODE = "supervise2026"; // demo-only gate, not real authentication
 
   let DATA = null;               // { students:{}, logs:[], programInternships:[] }
   let session = null;            // { role:'student'|'admin', studentId, studentName, internshipId }
@@ -735,7 +726,6 @@
     } else if(session.role === 'admin'){
       html += renderAdmin();
     }
-    html += renderFooter();
     html += renderMapModal();
     app.innerHTML = html;
     attachHandlers();
@@ -761,15 +751,6 @@
       </div>
       ${whoBlock}
     </div>`;
-  }
-
-  function renderFooter(){
-    return `<footer class="notice">
-      This copy talks to a Netlify Function backed by Netlify Blobs storage, so it works from any device, any domain —
-      not just inside Claude. Records refresh automatically every few seconds. The admin passcode is still a simple
-      shared code rather than real authentication, and by default anyone who can reach <code>/api/data</code> can read
-      or write it. Add real login and lock down the function before using this with real student data.
-    </footer>`;
   }
 
   function escapeHtml(s){
