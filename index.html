@@ -2,23 +2,23 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Fieldbook — Internship Time Log</title>
+<title>STHS Fieldbook — Internship Time Log</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --paper:#EFEEE6;
-    --paper-raised:#F8F7F1;
-    --ink:#1C2430;
-    --ink-soft:#4A5361;
-    --line:#D9D6C9;
-    --stamp:#B5652B;
-    --stamp-dark:#8F4E20;
-    --teal:#2B6558;
-    --teal-dark:#204A41;
+    --paper:#EEF1FA;
+    --paper-raised:#FFFFFF;
+    --ink:#1B2C6B;
+    --ink-soft:#4B5B95;
+    --line:#C9D2EE;
+    --stamp:#FDB515;
+    --stamp-dark:#8A5D00;
+    --teal:#2B409A;
+    --teal-dark:#16224F;
     --danger:#A23B34;
-    --shadow: 0 1px 2px rgba(28,36,48,0.06), 0 8px 24px rgba(28,36,48,0.06);
+    --shadow: 0 1px 2px rgba(27,44,107,0.08), 0 8px 24px rgba(27,44,107,0.08);
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
@@ -44,7 +44,7 @@
     align-items:center;
     justify-content:space-between;
     padding-bottom:22px;
-    border-bottom:2px solid var(--ink);
+    border-bottom:3px solid var(--teal);
     margin-bottom:28px;
   }
   .brand{
@@ -54,7 +54,9 @@
   }
   .brand-mark{
     width:34px;height:34px;
-    border:2px solid var(--ink);
+    background:var(--teal);
+    border:2px solid var(--stamp);
+    color:#fff;
     border-radius:50%;
     display:flex;align-items:center;justify-content:center;
     font-family:'Space Grotesk',sans-serif;
@@ -105,8 +107,8 @@
     font-size:11px;
     text-transform:uppercase;
     letter-spacing:0.12em;
-    color:var(--ink-soft);
-    font-weight:600;
+    color:var(--stamp-dark);
+    font-weight:700;
     margin:0 0 6px;
   }
   h2.section-title{
@@ -117,18 +119,24 @@
   }
 
   /* ---------- Role select ---------- */
+  .login-logo{
+    display:block;
+    max-width:360px;
+    width:100%;
+    height:auto;
+    margin:40px auto 0;
+  }
   .role-grid{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:18px;
-    max-width:640px;
-    margin:60px auto 0;
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+    max-width:480px;
+    margin:36px auto 0;
   }
   .role-card{
     background:var(--paper-raised);
     border:1px solid var(--line);
     border-radius:4px;
-    padding:32px 24px;
     text-align:left;
     cursor:pointer;
     transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease;
@@ -138,23 +146,42 @@
     transform:translateY(-2px);
     border-color:var(--ink);
   }
-  .role-card .num{
-    font-family:'JetBrains Mono',monospace;
-    font-size:12px;
-    color:var(--stamp);
-    display:block;
-    margin-bottom:14px;
-  }
   .role-card h3{
     font-family:'Space Grotesk',sans-serif;
-    font-size:20px;
     margin:0 0 8px;
   }
   .role-card p{
-    font-size:13.5px;
     color:var(--ink-soft);
     margin:0;
     line-height:1.5;
+  }
+  .role-card.primary{
+    padding:44px 32px;
+    border-width:3px;
+    border-color:var(--teal);
+  }
+  .role-card.primary:hover{
+    border-color:var(--stamp);
+  }
+  .role-card.primary h3{
+    font-size:30px;
+    color:var(--teal);
+  }
+  .role-card.primary p{
+    font-size:14.5px;
+    max-width:380px;
+  }
+  .role-card.secondary{
+    padding:16px 20px;
+    box-shadow:none;
+    align-self:center;
+  }
+  .role-card.secondary h3{
+    font-size:14px;
+    margin:0 0 3px;
+  }
+  .role-card.secondary p{
+    font-size:11.5px;
   }
 
   /* ---------- Forms ---------- */
@@ -189,9 +216,9 @@
     gap:8px;
     padding:11px 20px;
     border-radius:3px;
-    border:1px solid var(--ink);
-    background:var(--ink);
-    color:var(--paper-raised);
+    border:1px solid var(--teal);
+    background:var(--teal);
+    color:#fff;
     font-family:'Inter',sans-serif;
     font-weight:600;
     font-size:14px;
@@ -211,6 +238,91 @@
     color:var(--danger);
     font-size:13px;
     margin-top:10px;
+  }
+  .geo-cell{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+  }
+  .geo-thumb-btn{
+    display:block;
+    padding:0;
+    border:1px solid var(--line);
+    border-radius:3px;
+    background:none;
+    cursor:pointer;
+    transition:border-color .15s ease;
+  }
+  .geo-thumb-btn:hover{border-color:var(--ink);}
+  .geo-thumb-frame{
+    position:relative;
+    display:block;
+    width:96px;
+    height:96px;
+    overflow:hidden;
+    border-radius:2px;
+    background:var(--line);
+  }
+  .geo-thumb{
+    display:block;
+    width:100%;
+    height:100%;
+    object-fit:cover;
+  }
+  .geo-thumb-pin{
+    position:absolute;
+    width:11px;height:11px;
+    transform:translate(-50%,-50%);
+    background:var(--danger);
+    border:2px solid #fff;
+    border-radius:50%;
+    box-shadow:0 1px 3px rgba(0,0,0,0.5);
+    pointer-events:none;
+  }
+  .geo-coords{
+    font-size:11px;
+    color:var(--ink-soft);
+  }
+
+  /* ---------- Map preview modal ---------- */
+  .map-modal-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(27,44,107,0.55);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    z-index:1000;
+  }
+  .map-modal{
+    background:var(--paper-raised);
+    border:1px solid var(--line);
+    border-radius:6px;
+    box-shadow:var(--shadow);
+    width:100%;
+    max-width:640px;
+    position:relative;
+    overflow:hidden;
+  }
+  .map-modal iframe{
+    width:100%;
+    height:420px;
+    border:0;
+    display:block;
+  }
+  .map-modal-close{
+    position:absolute;
+    top:8px;right:10px;
+    width:28px;height:28px;
+    border-radius:50%;
+    border:none;
+    background:var(--ink);
+    color:var(--paper-raised);
+    font-size:16px;
+    line-height:1;
+    cursor:pointer;
+    z-index:2;
   }
   .hint{
     font-size:12.5px;
@@ -312,8 +424,8 @@
     text-transform:uppercase;
     letter-spacing:0.04em;
   }
-  .tag.in{background:rgba(43,101,88,0.12); color:var(--teal-dark);}
-  .tag.out{background:rgba(181,101,43,0.14); color:var(--stamp-dark);}
+  .tag.in{background:rgba(43,64,154,0.13); color:var(--teal-dark);}
+  .tag.out{background:rgba(253,181,21,0.20); color:var(--stamp-dark);}
   .empty-state{
     text-align:center;
     padding:30px 10px;
@@ -355,7 +467,6 @@
   }
 
   @media (max-width:640px){
-    .role-grid{grid-template-columns:1fr;}
     .stat-strip{grid-template-columns:1fr 1fr;}
     .row{flex-direction:column;}
   }
@@ -379,11 +490,13 @@
   const POLL_INTERVAL_MS = 8000;
 
   let usingPreviewStorage = false; // true only when /api/data isn't reachable (e.g. previewing here in chat)
+  let usingLocalStorage = false;   // true when /api/data isn't reachable and we're in a plain browser (local file testing)
 
   const ADMIN_PASSCODE = "supervise2026"; // demo-only gate, see notice in footer
 
   let DATA = null;               // { students:{}, logs:[], programInternships:[] }
   let session = null;            // { role:'student'|'admin', studentId, studentName, internshipId }
+  let mapModalGeo = null;        // { lat, lng } while a map preview modal is open, else null
   let loading = true;
   let loadError = null;
   let pollTimer = null;
@@ -442,10 +555,26 @@
     }
   }
 
+  // ---------- Local-storage data layer (plain-browser local testing) ----------
+  // Used when /api/data isn't reachable and we're not inside Claude's preview
+  // sandbox either — i.e. someone opened index.html directly in a browser.
+  // Keeps data in this browser's localStorage so the app is still usable
+  // without running `netlify dev`. Not used once hosted on Netlify.
+  function loadLocalStorageData(){
+    try{
+      const raw = window.localStorage.getItem(PREVIEW_KEY);
+      DATA = raw ? normalize(JSON.parse(raw)) : emptyData();
+    }catch(e){
+      DATA = emptyData();
+    }
+  }
+
   async function saveData(){
     try{
       if(usingPreviewStorage){
         await window.storage.set(PREVIEW_KEY, JSON.stringify(DATA), true);
+      } else if(usingLocalStorage){
+        window.localStorage.setItem(PREVIEW_KEY, JSON.stringify(DATA));
       } else {
         await saveToApi();
       }
@@ -467,6 +596,34 @@
   }
   function fmtCoord(n){
     return (typeof n === 'number') ? n.toFixed(5) : "—";
+  }
+  // Converts lat/lng to an OpenStreetMap slippy-map tile (x,y at the given
+  // zoom) plus the fractional pixel position within that tile, so we can
+  // hotlink the single raw tile as the thumbnail image and draw our own
+  // marker dot on top at the exact spot — no static-map API/key needed.
+  function latLngToTile(lat, lng, zoom){
+    const latRad = lat * Math.PI / 180;
+    const n = Math.pow(2, zoom);
+    const xf = (lng + 180) / 360 * n;
+    const yf = (1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 * n;
+    const x = Math.floor(xf);
+    const y = Math.floor(yf);
+    return { x, y, z: zoom, pctX: (xf - x) * 100, pctY: (yf - y) * 100 };
+  }
+  function renderGeoCell(geo){
+    if(!geo || !geo.ok) return "No location";
+    const t = latLngToTile(geo.lat, geo.lng, 16);
+    const tileUrl = `https://tile.openstreetmap.org/${t.z}/${t.x}/${t.y}.png`;
+    return `
+    <div class="geo-cell">
+      <button type="button" class="geo-thumb-btn" data-lat="${geo.lat}" data-lng="${geo.lng}" title="View larger map">
+        <span class="geo-thumb-frame">
+          <img class="geo-thumb" src="${tileUrl}" alt="Map preview near ${fmtCoord(geo.lat)}, ${fmtCoord(geo.lng)}" loading="lazy">
+          <span class="geo-thumb-pin" style="left:${t.pctX}%;top:${t.pctY}%;"></span>
+        </span>
+      </button>
+      <span class="geo-coords mono">${fmtCoord(geo.lat)}, ${fmtCoord(geo.lng)}</span>
+    </div>`;
   }
 
   function formatDuration(hours){
@@ -566,6 +723,11 @@
         <p style="margin:0;font-size:13px;color:var(--stamp-dark);"><strong>Preview mode.</strong> The <code>/api/data</code> function isn't reachable here, so you're testing with Claude's built-in storage instead. Data here won't carry over — once this is deployed on Netlify with its function, it'll connect automatically.</p>
       </div>`;
     }
+    if(usingLocalStorage){
+      html += `<div class="card" style="border-color:var(--stamp);margin-bottom:18px;padding:16px 20px;">
+        <p style="margin:0;font-size:13px;color:var(--stamp-dark);"><strong>Local testing mode.</strong> The <code>/api/data</code> function isn't reachable, so data is being saved to this browser's local storage instead. It won't sync across devices or survive clearing browser data — once this is deployed on Netlify with its function, it'll connect automatically and this banner will disappear.</p>
+      </div>`;
+    }
     if(!session){
       html += renderRoleSelect();
     } else if(session.role === 'student'){
@@ -574,6 +736,7 @@
       html += renderAdmin();
     }
     html += renderFooter();
+    html += renderMapModal();
     app.innerHTML = html;
     attachHandlers();
   }
@@ -592,7 +755,7 @@
       <div class="brand">
         <div class="brand-mark">FB</div>
         <div>
-          <h1>Fieldbook</h1>
+          <h1>STHS Fieldbook</h1>
           <span class="sub">Internship time &amp; location log</span>
         </div>
       </div>
@@ -613,17 +776,33 @@
     return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
 
+  // ---------- map preview modal ----------
+  // Uses OpenStreetMap's embeddable export view, so no API key/billing setup is needed.
+  function renderMapModal(){
+    if(!mapModalGeo) return '';
+    const { lat, lng } = mapModalGeo;
+    const dLat = 0.004, dLng = 0.006;
+    const bbox = `${lng-dLng},${lat-dLat},${lng+dLng},${lat+dLat}`;
+    const src = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&marker=${lat},${lng}`;
+    return `
+    <div class="map-modal-overlay" id="map-modal-overlay">
+      <div class="map-modal">
+        <button type="button" class="map-modal-close" id="map-modal-close" aria-label="Close map preview">×</button>
+        <iframe src="${src}" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+      </div>
+    </div>`;
+  }
+
   // ---------- role select ----------
   function renderRoleSelect(){
     return `
+    <img class="login-logo" src="logo.png" alt="South Tahoe High School CTE">
     <div class="role-grid">
-      <div class="role-card" id="role-student">
-        <span class="num mono">01</span>
+      <div class="role-card primary" id="role-student">
         <h3>I'm interning</h3>
         <p>Clock in and out of your placement. Your name, internship, and location get stamped into the log automatically.</p>
       </div>
-      <div class="role-card" id="role-admin">
-        <span class="num mono">02</span>
+      <div class="role-card secondary" id="role-admin">
         <h3>I run the program</h3>
         <p>Review every student's time log across all internships, filter by date or site, and export the records.</p>
       </div>
@@ -643,20 +822,27 @@
   }
 
   function renderStudentIdentify(){
+    const list = DATA.programInternships;
+    const options = list.map(i =>
+      `<option value="${i.id}">${escapeHtml(i.name)}${i.org ? " — "+escapeHtml(i.org) : ""}</option>`
+    ).join("");
     return `
     <div class="card" style="max-width:480px;margin:20px auto 0;">
-      <p class="eyebrow">Step 1 of 2</p>
       <h2 class="section-title">Who's clocking in?</h2>
       <div class="field">
         <label for="in-name">Full name</label>
         <input type="text" id="in-name" placeholder="e.g. Jordan Alvarez">
       </div>
       <div class="field">
-        <label for="in-sid">Student ID or school email</label>
-        <input type="text" id="in-sid" placeholder="e.g. jalvarez@school.edu">
+        <label for="sel-internship">Internship</label>
+        <select id="sel-internship" ${!list.length ? 'disabled' : ''}>
+          <option value="">— Choose one —</option>
+          ${options}
+        </select>
       </div>
+      ${!list.length ? `<p class="hint" style="margin:0 0 10px;">Your program admin hasn't added any internships to choose from yet. Check back once they've set the list up.</p>` : ''}
       <div id="identify-error" class="error-msg"></div>
-      <button class="btn full" id="btn-identify">Continue</button>
+      <button class="btn full" id="btn-identify" ${!list.length ? 'disabled' : ''}>Continue</button>
     </div>`;
   }
 
@@ -665,7 +851,7 @@
     if(!list.length){
       return `
       <div class="card" style="max-width:480px;margin:20px auto 0;">
-        <p class="eyebrow">Step 2 of 2 · ${escapeHtml(student.name)}</p>
+        <p class="eyebrow">${escapeHtml(student.name)}</p>
         <h2 class="section-title">No internships set up yet</h2>
         <p class="hint" style="margin:0;">Your program admin hasn't added any internships to choose from. Check back once they've set the list up.</p>
       </div>`;
@@ -675,7 +861,7 @@
     ).join("");
     return `
     <div class="card" style="max-width:480px;margin:20px auto 0;">
-      <p class="eyebrow">Step 2 of 2 · ${escapeHtml(student.name)}</p>
+      <p class="eyebrow">${escapeHtml(student.name)}</p>
       <h2 class="section-title">Which internship are you part of?</h2>
       <div class="field">
         <label for="sel-internship">Internship</label>
@@ -708,7 +894,7 @@
       <tr>
         <td class="mono">${fmtDateTime(l.timestamp)}</td>
         <td><span class="tag ${l.type}">${l.type === 'in' ? 'Clock in' : 'Clock out'}</span></td>
-        <td class="mono">${l.geo && l.geo.ok ? fmtCoord(l.geo.lat)+", "+fmtCoord(l.geo.lng) : "No location"}</td>
+        <td class="mono">${renderGeoCell(l.geo)}</td>
       </tr>`).join("");
 
     return `
@@ -728,7 +914,8 @@
           <span class="noun">tap to stamp</span>
         </button>
         <div class="stamp-result" id="stamp-result">
-          ${last ? `<div class="status">Last stamp: ${last.type === 'in' ? 'Clocked in' : 'Clocked out'} at ${fmtDateTime(last.timestamp)}</div>` : `<div class="status">No entries yet — this will be your first stamp.</div>`}
+          ${last ? `<div class="status">Last stamp: ${last.type === 'in' ? 'Clocked in' : 'Clocked out'} at ${fmtDateTime(last.timestamp)}</div>
+          <div class="coords">${renderGeoCell(last.geo)}</div>` : `<div class="status">No entries yet — this will be your first stamp.</div>`}
         </div>
       </div>
     </div>
@@ -794,7 +981,7 @@
         <td>${student ? escapeHtml(student.name) : "—"}</td>
         <td>${escapeHtml(l.internshipName)}${l.internshipOrg ? " · "+escapeHtml(l.internshipOrg) : ""}</td>
         <td><span class="tag ${l.type}">${l.type==='in'?'In':'Out'}</span></td>
-        <td class="mono">${l.geo && l.geo.ok ? fmtCoord(l.geo.lat)+", "+fmtCoord(l.geo.lng) : "No location"}</td>
+        <td class="mono">${renderGeoCell(l.geo)}</td>
         <td class="mono">${l.geo && l.geo.ok ? Math.round(l.geo.accuracy)+"m" : "—"}</td>
       </tr>`;
     }).join("");
@@ -972,14 +1159,18 @@
 
     if($('btn-identify')) $('btn-identify').onclick = () => {
       const name = $('in-name').value.trim();
-      const sidRaw = $('in-sid').value.trim();
-      if(!name || !sidRaw){
-        $('identify-error').textContent = "Enter both your name and a student ID or email.";
+      const internshipId = $('sel-internship').value;
+      if(!name){
+        $('identify-error').textContent = "Enter your name.";
         return;
       }
-      const sid = slugId(sidRaw);
+      if(!internshipId){
+        $('identify-error').textContent = "Choose your internship.";
+        return;
+      }
+      const sid = slugId(name);
       if(!DATA.students[sid]){
-        DATA.students[sid] = { id: sid, name, rawId: sidRaw, internships: [] };
+        DATA.students[sid] = { id: sid, name, internships: [] };
         saveData();
       } else {
         DATA.students[sid].name = name; // keep name current
@@ -987,6 +1178,7 @@
       }
       session.studentId = sid;
       session.studentName = name;
+      session.internshipId = internshipId;
       render();
     };
 
@@ -1031,6 +1223,17 @@
       session.internshipId = null;
       render();
     };
+
+    document.querySelectorAll('.geo-thumb-btn').forEach(btn => {
+      btn.onclick = () => {
+        mapModalGeo = { lat: parseFloat(btn.dataset.lat), lng: parseFloat(btn.dataset.lng) };
+        render();
+      };
+    });
+    if($('map-modal-overlay')) $('map-modal-overlay').onclick = (e) => {
+      if(e.target.id === 'map-modal-overlay'){ mapModalGeo = null; render(); }
+    };
+    if($('map-modal-close')) $('map-modal-close').onclick = () => { mapModalGeo = null; render(); };
 
     if($('btn-stamp')) $('btn-stamp').onclick = async () => {
       const btn = $('btn-stamp');
@@ -1196,6 +1399,10 @@
     URL.revokeObjectURL(url);
   }
 
+  document.addEventListener('keydown', (e) => {
+    if(e.key === 'Escape' && mapModalGeo){ mapModalGeo = null; render(); }
+  });
+
   // ---------- boot ----------
   (async function boot(){
     try{
@@ -1206,6 +1413,10 @@
       if(typeof window.storage !== 'undefined'){
         usingPreviewStorage = true;
         await loadPreviewData();
+        loading = false;
+      } else if(typeof window.localStorage !== 'undefined'){
+        usingLocalStorage = true;
+        loadLocalStorageData();
         loading = false;
       } else {
         loadError = apiErr.message || "Couldn't reach /api/data.";
