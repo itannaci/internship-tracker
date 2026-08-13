@@ -983,6 +983,7 @@
         <td><span class="tag ${l.type}">${l.type==='in'?'In':'Out'}</span></td>
         <td class="mono">${renderGeoCell(l.geo)}</td>
         <td class="mono">${l.geo && l.geo.ok ? Math.round(l.geo.accuracy)+"m" : "—"}</td>
+        <td style="text-align:right;"><button class="btn ghost btn-remove-log" data-id="${l.id}" style="padding:4px 10px;font-size:12px;">Delete</button></td>
       </tr>`;
     }).join("");
 
@@ -1142,7 +1143,7 @@
       ${logs.length ? `
       <div class="table-scroll">
       <table class="ledger">
-        <thead><tr><th>Timestamp</th><th>Student</th><th>Internship</th><th>Action</th><th>Coordinates</th><th>Accuracy</th></tr></thead>
+        <thead><tr><th>Timestamp</th><th>Student</th><th>Internship</th><th>Action</th><th>Coordinates</th><th>Accuracy</th><th></th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
       </div>` : `<div class="empty-state">No entries match these filters yet.</div>`}
@@ -1223,6 +1224,16 @@
       session.internshipId = null;
       render();
     };
+
+    document.querySelectorAll('.btn-remove-log').forEach(btn => {
+      btn.onclick = () => {
+        const id = btn.dataset.id;
+        if(!confirm("Delete this log entry? This can't be undone.")) return;
+        DATA.logs = DATA.logs.filter(l => l.id !== id);
+        saveData();
+        render();
+      };
+    });
 
     document.querySelectorAll('.geo-thumb-btn').forEach(btn => {
       btn.onclick = () => {
