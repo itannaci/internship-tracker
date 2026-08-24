@@ -814,12 +814,21 @@
     if(!editSession) return '';
     const inLog = editSession.inLogId ? DATA.logs.find(l => l.id === editSession.inLogId) : null;
     const outLog = editSession.outLogId ? DATA.logs.find(l => l.id === editSession.outLogId) : null;
+    const list = DATA.programInternships;
+    const currentStillListed = list.some(i => i.id === editSession.internshipId);
+    const internshipOptions =
+      (currentStillListed ? '' : `<option value="${editSession.internshipId}" selected>${escapeHtml(editSession.internshipName)} (removed from list)</option>`) +
+      list.map(i => `<option value="${i.id}" ${i.id===editSession.internshipId?'selected':''}>${escapeHtml(i.name)}${i.org?" — "+escapeHtml(i.org):""}</option>`).join("");
     return `
     <div class="modal-overlay" id="edit-session-overlay">
       <div class="modal-box form">
         <button type="button" class="modal-close" id="edit-session-close" aria-label="Close">×</button>
         <p class="eyebrow">${escapeHtml(editSession.label)}</p>
         <h2 class="section-title">Edit clock in/out</h2>
+        <div class="field">
+          <label for="edit-internship">Internship</label>
+          <select id="edit-internship">${internshipOptions}</select>
+        </div>
         <div class="field">
           <label for="edit-in-time">Clock in</label>
           <input type="datetime-local" id="edit-in-time" value="${inLog ? isoToLocalInput(inLog.timestamp) : ''}">
@@ -1086,7 +1095,7 @@
 
     const sessionRows = sessions.slice(0,300).map(s => {
       const student = DATA.students[s.studentId];
-      const label = `${student ? student.name : "Unknown student"} · ${s.internshipName}`;
+      const label = student ? student.name : "Unknown student";
       return `
       <tr>
         <td>${student ? escapeHtml(student.name) : "—"}</td>
@@ -1094,11 +1103,16 @@
         <td class="mono">${s.inTime ? fmtDateTime(s.inTime) : "—"}</td>
         <td class="mono">${s.outTime ? fmtDateTime(s.outTime) : "—"}</td>
         <td class="mono">${formatDuration(s.hours)}</td>
-        <td style="text-align:right;"><button type="button" class="btn ghost btn-edit-session"
-          data-in-log-id="${s.inLogId || ''}" data-out-log-id="${s.outLogId || ''}"
-          data-student-id="${s.studentId}" data-internship-id="${s.internshipId}"
-          data-internship-name="${escapeHtml(s.internshipName)}" data-internship-org="${escapeHtml(s.internshipOrg || '')}"
-          data-label="${escapeHtml(label)}" style="padding:4px 10px;font-size:12px;">${s.inLogId && s.outLogId ? 'Edit' : 'Edit / Add'}</button></td>
+        <td style="text-align:right;white-space:nowrap;">
+          <button type="button" class="btn ghost btn-edit-session"
+            data-in-log-id="${s.inLogId || ''}" data-out-log-id="${s.outLogId || ''}"
+            data-student-id="${s.studentId}" data-internship-id="${s.internshipId}"
+            data-internship-name="${escapeHtml(s.internshipName)}" data-internship-org="${escapeHtml(s.internshipOrg || '')}"
+            data-label="${escapeHtml(label)}" style="padding:4px 10px;font-size:12px;">${s.inLogId && s.outLogId ? 'Edit' : 'Edit / Add'}</button>
+          <button type="button" class="btn ghost btn-remove-session"
+            data-in-log-id="${s.inLogId || ''}" data-out-log-id="${s.outLogId || ''}"
+            style="padding:4px 10px;font-size:12px;">Delete</button>
+        </td>
       </tr>`;
     }).join("");
 
@@ -1173,6 +1187,31 @@
         <button class="btn" id="btn-export-summary">Download hours summary (CSV)</button>
       </div>
       <p class="hint" style="margin:0 0 18px;">Each row pairs a clock-in with its next clock-out for the same intern and internship. An entry still open shows as "In progress" and isn't counted in the totals yet.</p>
+
+      <h3 style="font-family:'Space Grotesk',sans-serif;font-size:14.5px;margin:0 0 10px;">Add an entry</h3>
+      <p class="hint" style="margin:0 0 14px;">Type a new or existing student's name to add a clock-in (and optionally a clock-out) directly — useful for backfilling a day someone forgot to clock in.</p>
+      <div class="row">
+        <div class="field">
+          <label for="new-entry-name">Student name</label>
+          <input type="text" id="new-entry-name" placeholder="e.g. Jordan Alvarez">
+        </div>
+        <div class="field">
+          <label for="new-entry-internship">Internship</label>
+          <select id="new-entry-internship"><option value="">— Choose internship —</option>${internshipOptions}</select>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label for="new-entry-in">Clock in</label>
+          <input type="datetime-local" id="new-entry-in">
+        </div>
+        <div class="field">
+          <label for="new-entry-out">Clock out (optional)</label>
+          <input type="datetime-local" id="new-entry-out">
+        </div>
+      </div>
+      <div id="new-entry-error" class="error-msg"></div>
+      <button class="btn" id="btn-add-entry" style="margin-bottom:24px;">Add entry</button>
 
       <h3 style="font-family:'Space Grotesk',sans-serif;font-size:14.5px;margin:0 0 10px;">Entries</h3>
       ${sessions.length ? `
@@ -1277,6 +1316,58 @@
       render();
     };
 
+    if($('btn-add-entry')) $('btn-add-entry').onclick = () => {
+      const name = $('new-entry-name').value.trim();
+      const internshipId = $('new-entry-internship').value;
+      const inVal = $('new-entry-in').value;
+      const outVal = $('new-entry-out').value;
+      if(!name){
+        $('new-entry-error').textContent = "Enter a student name.";
+        return;
+      }
+      if(!internshipId){
+        $('new-entry-error').textContent = "Choose an internship.";
+        return;
+      }
+      if(!inVal){
+        $('new-entry-error').textContent = "Clock-in time is required.";
+        return;
+      }
+      const inIso = localInputToIso(inVal);
+      let outIso = null;
+      if(outVal){
+        outIso = localInputToIso(outVal);
+        if(new Date(outIso) <= new Date(inIso)){
+          $('new-entry-error').textContent = "Clock-out must be after clock-in.";
+          return;
+        }
+      }
+      const internship = DATA.programInternships.find(i => i.id === internshipId);
+      const sid = slugId(name);
+      if(!DATA.students[sid]){
+        DATA.students[sid] = { id: sid, name, internships: [] };
+      } else {
+        DATA.students[sid].name = name; // keep name current
+      }
+      const newLog = (type, iso) => ({
+        id: uid('log'),
+        studentId: sid,
+        internshipId,
+        internshipName: internship.name,
+        internshipOrg: internship.org || "",
+        type,
+        timestamp: iso,
+        geo: { ok:false, error:"Added manually by admin" }
+      });
+      DATA.logs.push(newLog('in', inIso));
+      if(outIso) DATA.logs.push(newLog('out', outIso));
+      saveData();
+      $('new-entry-name').value = "";
+      $('new-entry-in').value = "";
+      $('new-entry-out').value = "";
+      render();
+    };
+
     document.querySelectorAll('.btn-remove-internship').forEach(btn => {
       btn.onclick = () => {
         const id = btn.dataset.id;
@@ -1359,6 +1450,16 @@
         render();
       };
     });
+    document.querySelectorAll('.btn-remove-session').forEach(btn => {
+      btn.onclick = () => {
+        if(!confirm("Delete this entry? This can't be undone.")) return;
+        const inId = btn.dataset.inLogId;
+        const outId = btn.dataset.outLogId;
+        DATA.logs = DATA.logs.filter(l => l.id !== inId && l.id !== outId);
+        saveData();
+        render();
+      };
+    });
     if($('edit-session-overlay')) $('edit-session-overlay').onclick = (e) => {
       if(e.target.id === 'edit-session-overlay'){ editSession = null; render(); }
     };
@@ -1382,25 +1483,39 @@
         $('edit-session-error').textContent = "Clock-out must be after clock-in.";
         return;
       }
+      const internshipId = $('edit-internship').value;
+      const internship = DATA.programInternships.find(i => i.id === internshipId);
+      const internshipName = internship ? internship.name : editSession.internshipName;
+      const internshipOrg = internship ? (internship.org || "") : (editSession.internshipOrg || "");
       const newLog = (type, iso) => ({
         id: uid('log'),
         studentId: editSession.studentId,
-        internshipId: editSession.internshipId,
-        internshipName: editSession.internshipName,
-        internshipOrg: editSession.internshipOrg || "",
+        internshipId,
+        internshipName,
+        internshipOrg,
         type,
         timestamp: iso,
         geo: { ok:false, error:"Added manually by admin" }
       });
       if(editSession.inLogId){
         const inLog = DATA.logs.find(l => l.id === editSession.inLogId);
-        if(inLog) inLog.timestamp = inIso;
+        if(inLog){
+          inLog.timestamp = inIso;
+          inLog.internshipId = internshipId;
+          inLog.internshipName = internshipName;
+          inLog.internshipOrg = internshipOrg;
+        }
       } else if(inIso){
         DATA.logs.push(newLog('in', inIso));
       }
       if(editSession.outLogId){
         const outLog = DATA.logs.find(l => l.id === editSession.outLogId);
-        if(outLog) outLog.timestamp = outIso;
+        if(outLog){
+          outLog.timestamp = outIso;
+          outLog.internshipId = internshipId;
+          outLog.internshipName = internshipName;
+          outLog.internshipOrg = internshipOrg;
+        }
       } else if(outIso){
         DATA.logs.push(newLog('out', outIso));
       }
