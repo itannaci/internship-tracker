@@ -195,7 +195,7 @@
     margin-bottom:6px;
   }
   .field{margin-bottom:16px;}
-  input[type="text"], input[type="password"], select{
+  input[type="text"], input[type="password"], input[type="datetime-local"], select{
     width:100%;
     padding:11px 12px;
     border:1px solid var(--line);
@@ -284,8 +284,8 @@
     color:var(--ink-soft);
   }
 
-  /* ---------- Map preview modal ---------- */
-  .map-modal-overlay{
+  /* ---------- Modals (map preview, edit hours) ---------- */
+  .modal-overlay{
     position:fixed;
     inset:0;
     background:rgba(27,44,107,0.55);
@@ -295,7 +295,7 @@
     padding:20px;
     z-index:1000;
   }
-  .map-modal{
+  .modal-box{
     background:var(--paper-raised);
     border:1px solid var(--line);
     border-radius:6px;
@@ -305,13 +305,17 @@
     position:relative;
     overflow:hidden;
   }
-  .map-modal iframe{
+  .modal-box iframe{
     width:100%;
     height:420px;
     border:0;
     display:block;
   }
-  .map-modal-close{
+  .modal-box.form{
+    max-width:420px;
+    padding:28px;
+  }
+  .modal-close{
     position:absolute;
     top:8px;right:10px;
     width:28px;height:28px;
@@ -488,6 +492,8 @@
   let DATA = null;               // { students:{}, logs:[], programInternships:[] }
   let session = null;            // { role:'student'|'admin', studentId, studentName, internshipId }
   let mapModalGeo = null;        // { lat, lng } while a map preview modal is open, else null
+  let editSession = null;        // { inLogId, outLogId, label } while the edit-hours modal is open, else null
+  let editingInternshipId = null; // id of the internship whose row is in inline-edit mode, else null
   let loading = true;
   let loadError = null;
   let pollTimer = null;
@@ -585,6 +591,16 @@
     const d = new Date(iso);
     return d.toLocaleString(undefined,{ month:'short', day:'numeric', year:'numeric', hour:'2-digit', minute:'2-digit' });
   }
+  // Converts a stored ISO timestamp to the local "YYYY-MM-DDTHH:mm" string a
+  // <input type="datetime-local"> expects, and back again.
+  function isoToLocalInput(iso){
+    const d = new Date(iso);
+    const pad = n => String(n).padStart(2,'0');
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+  function localInputToIso(val){
+    return new Date(val).toISOString();
+  }
   function fmtCoord(n){
     return (typeof n === 'number') ? n.toFixed(5) : "—";
   }
@@ -652,6 +668,8 @@
               internshipOrg: l.internshipOrg,
               inTime: pending.timestamp,
               outTime: l.timestamp,
+              inLogId: pending.id,
+              outLogId: l.id,
               hours: (outTime - inTime) / 3600000
             });
             pending = null;
@@ -666,6 +684,8 @@
           internshipOrg: pending.internshipOrg,
           inTime: pending.timestamp,
           outTime: null,
+          inLogId: pending.id,
+          outLogId: null,
           hours: null
         });
       }
@@ -727,6 +747,7 @@
       html += renderAdmin();
     }
     html += renderMapModal();
+    html += renderEditSessionModal();
     app.innerHTML = html;
     attachHandlers();
   }
@@ -766,10 +787,40 @@
     const bbox = `${lng-dLng},${lat-dLat},${lng+dLng},${lat+dLat}`;
     const src = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&marker=${lat},${lng}`;
     return `
-    <div class="map-modal-overlay" id="map-modal-overlay">
-      <div class="map-modal">
-        <button type="button" class="map-modal-close" id="map-modal-close" aria-label="Close map preview">×</button>
+    <div class="modal-overlay" id="map-modal-overlay">
+      <div class="modal-box">
+        <button type="button" class="modal-close" id="map-modal-close" aria-label="Close map preview">×</button>
         <iframe src="${src}" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+      </div>
+    </div>`;
+  }
+
+  // ---------- edit-hours modal ----------
+  function renderEditSessionModal(){
+    if(!editSession) return '';
+    const inLog = DATA.logs.find(l => l.id === editSession.inLogId);
+    const outLog = editSession.outLogId ? DATA.logs.find(l => l.id === editSession.outLogId) : null;
+    if(!inLog) return '';
+    return `
+    <div class="modal-overlay" id="edit-session-overlay">
+      <div class="modal-box form">
+        <button type="button" class="modal-close" id="edit-session-close" aria-label="Close">×</button>
+        <p class="eyebrow">${escapeHtml(editSession.label)}</p>
+        <h2 class="section-title">Edit clock in/out</h2>
+        <div class="field">
+          <label for="edit-in-time">Clock in</label>
+          <input type="datetime-local" id="edit-in-time" value="${isoToLocalInput(inLog.timestamp)}">
+        </div>
+        ${outLog ? `
+        <div class="field">
+          <label for="edit-out-time">Clock out</label>
+          <input type="datetime-local" id="edit-out-time" value="${isoToLocalInput(outLog.timestamp)}">
+        </div>` : `<p class="hint" style="margin:0 0 16px;">This entry is still in progress — there's no clock-out time to edit yet.</p>`}
+        <div id="edit-session-error" class="error-msg"></div>
+        <div class="row">
+          <button type="button" class="btn ghost" id="edit-session-cancel">Cancel</button>
+          <button type="button" class="btn" id="edit-session-save">Save changes</button>
+        </div>
       </div>
     </div>`;
   }
@@ -968,12 +1019,28 @@
       </tr>`;
     }).join("");
 
-    const internshipRows = allInternships.map(i => `
+    const internshipRows = allInternships.map(i => {
+      if(i.id === editingInternshipId){
+        return `
+        <tr>
+          <td><input type="text" id="edit-pi-name" value="${escapeHtml(i.name)}"></td>
+          <td><input type="text" id="edit-pi-org" value="${i.org ? escapeHtml(i.org) : ""}"></td>
+          <td style="text-align:right;white-space:nowrap;">
+            <button class="btn ghost btn-cancel-internship" style="padding:5px 12px;font-size:12.5px;">Cancel</button>
+            <button class="btn btn-save-internship" data-id="${i.id}" style="padding:5px 12px;font-size:12.5px;">Save</button>
+          </td>
+        </tr>`;
+      }
+      return `
       <tr>
         <td>${escapeHtml(i.name)}</td>
         <td>${i.org ? escapeHtml(i.org) : "—"}</td>
-        <td style="text-align:right;"><button class="btn ghost btn-remove-internship" data-id="${i.id}" style="padding:5px 12px;font-size:12.5px;">Remove</button></td>
-      </tr>`).join("");
+        <td style="text-align:right;white-space:nowrap;">
+          <button class="btn ghost btn-edit-internship" data-id="${i.id}" style="padding:5px 12px;font-size:12.5px;">Edit</button>
+          <button class="btn ghost btn-remove-internship" data-id="${i.id}" style="padding:5px 12px;font-size:12.5px;">Remove</button>
+        </td>
+      </tr>`;
+    }).join("");
 
     // ---- hours summary: pair clock-ins with clock-outs, apply the same filters ----
     let sessions = computeSessions();
@@ -1003,6 +1070,7 @@
 
     const sessionRows = sessions.slice(0,300).map(s => {
       const student = DATA.students[s.studentId];
+      const label = `${student ? student.name : "Unknown student"} · ${s.internshipName}`;
       return `
       <tr>
         <td>${student ? escapeHtml(student.name) : "—"}</td>
@@ -1010,6 +1078,7 @@
         <td class="mono">${fmtDateTime(s.inTime)}</td>
         <td class="mono">${s.outTime ? fmtDateTime(s.outTime) : "—"}</td>
         <td class="mono">${formatDuration(s.hours)}</td>
+        <td style="text-align:right;"><button type="button" class="btn ghost btn-edit-session" data-in-log-id="${s.inLogId}" data-out-log-id="${s.outLogId || ''}" data-label="${escapeHtml(label)}" style="padding:4px 10px;font-size:12px;">Edit</button></td>
       </tr>`;
     }).join("");
 
@@ -1089,7 +1158,7 @@
       ${sessions.length ? `
       <div class="table-scroll" style="margin-bottom:24px;">
       <table class="ledger">
-        <thead><tr><th>Student</th><th>Internship</th><th>Clock in</th><th>Clock out</th><th>Hours</th></tr></thead>
+        <thead><tr><th>Student</th><th>Internship</th><th>Clock in</th><th>Clock out</th><th>Hours</th><th></th></tr></thead>
         <tbody>${sessionRows}</tbody>
       </table>
       </div>` : `<div class="empty-state" style="margin-bottom:24px;">No completed entries match these filters yet.</div>`}
@@ -1201,6 +1270,35 @@
       };
     });
 
+    document.querySelectorAll('.btn-edit-internship').forEach(btn => {
+      btn.onclick = () => { editingInternshipId = btn.dataset.id; render(); };
+    });
+    document.querySelectorAll('.btn-cancel-internship').forEach(btn => {
+      btn.onclick = () => { editingInternshipId = null; render(); };
+    });
+    document.querySelectorAll('.btn-save-internship').forEach(btn => {
+      btn.onclick = () => {
+        const id = btn.dataset.id;
+        const name = $('edit-pi-name').value.trim();
+        const org = $('edit-pi-org').value.trim();
+        if(!name) return;
+        const internship = DATA.programInternships.find(i => i.id === id);
+        if(internship){
+          internship.name = name;
+          internship.org = org;
+        }
+        DATA.logs.forEach(l => {
+          if(l.internshipId === id){
+            l.internshipName = name;
+            l.internshipOrg = org;
+          }
+        });
+        saveData();
+        editingInternshipId = null;
+        render();
+      };
+    });
+
     if($('btn-switch-internship')) $('btn-switch-internship').onclick = () => {
       session.internshipId = null;
       render();
@@ -1226,6 +1324,52 @@
       if(e.target.id === 'map-modal-overlay'){ mapModalGeo = null; render(); }
     };
     if($('map-modal-close')) $('map-modal-close').onclick = () => { mapModalGeo = null; render(); };
+
+    document.querySelectorAll('.btn-edit-session').forEach(btn => {
+      btn.onclick = () => {
+        editSession = {
+          inLogId: btn.dataset.inLogId,
+          outLogId: btn.dataset.outLogId || null,
+          label: btn.dataset.label
+        };
+        render();
+      };
+    });
+    if($('edit-session-overlay')) $('edit-session-overlay').onclick = (e) => {
+      if(e.target.id === 'edit-session-overlay'){ editSession = null; render(); }
+    };
+    if($('edit-session-close')) $('edit-session-close').onclick = () => { editSession = null; render(); };
+    if($('edit-session-cancel')) $('edit-session-cancel').onclick = () => { editSession = null; render(); };
+    if($('edit-session-save')) $('edit-session-save').onclick = () => {
+      const inVal = $('edit-in-time').value;
+      const outInput = $('edit-out-time');
+      if(!inVal){
+        $('edit-session-error').textContent = "Clock-in time is required.";
+        return;
+      }
+      const inIso = localInputToIso(inVal);
+      let outIso = null;
+      if(outInput){
+        if(!outInput.value){
+          $('edit-session-error').textContent = "Clock-out time is required.";
+          return;
+        }
+        outIso = localInputToIso(outInput.value);
+        if(new Date(outIso) <= new Date(inIso)){
+          $('edit-session-error').textContent = "Clock-out must be after clock-in.";
+          return;
+        }
+      }
+      const inLog = DATA.logs.find(l => l.id === editSession.inLogId);
+      if(inLog) inLog.timestamp = inIso;
+      if(editSession.outLogId && outIso){
+        const outLog = DATA.logs.find(l => l.id === editSession.outLogId);
+        if(outLog) outLog.timestamp = outIso;
+      }
+      saveData();
+      editSession = null;
+      render();
+    };
 
     if($('btn-stamp')) $('btn-stamp').onclick = async () => {
       const btn = $('btn-stamp');
@@ -1392,7 +1536,9 @@
   }
 
   document.addEventListener('keydown', (e) => {
-    if(e.key === 'Escape' && mapModalGeo){ mapModalGeo = null; render(); }
+    if(e.key !== 'Escape') return;
+    if(mapModalGeo){ mapModalGeo = null; render(); }
+    else if(editSession){ editSession = null; render(); }
   });
 
   // ---------- boot ----------
