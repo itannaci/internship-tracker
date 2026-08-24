@@ -673,6 +673,20 @@
               hours: (outTime - inTime) / 3600000
             });
             pending = null;
+          } else {
+            // A clock-out with no preceding clock-in (e.g. the clock-in was
+            // deleted) — still surface it so its missing clock-in can be added.
+            sessions.push({
+              studentId: l.studentId,
+              internshipId: l.internshipId,
+              internshipName: l.internshipName,
+              internshipOrg: l.internshipOrg,
+              inTime: null,
+              outTime: l.timestamp,
+              inLogId: null,
+              outLogId: l.id,
+              hours: null
+            });
           }
         }
       });
@@ -798,9 +812,8 @@
   // ---------- edit-hours modal ----------
   function renderEditSessionModal(){
     if(!editSession) return '';
-    const inLog = DATA.logs.find(l => l.id === editSession.inLogId);
+    const inLog = editSession.inLogId ? DATA.logs.find(l => l.id === editSession.inLogId) : null;
     const outLog = editSession.outLogId ? DATA.logs.find(l => l.id === editSession.outLogId) : null;
-    if(!inLog) return '';
     return `
     <div class="modal-overlay" id="edit-session-overlay">
       <div class="modal-box form">
@@ -809,13 +822,14 @@
         <h2 class="section-title">Edit clock in/out</h2>
         <div class="field">
           <label for="edit-in-time">Clock in</label>
-          <input type="datetime-local" id="edit-in-time" value="${isoToLocalInput(inLog.timestamp)}">
+          <input type="datetime-local" id="edit-in-time" value="${inLog ? isoToLocalInput(inLog.timestamp) : ''}">
+          ${!inLog ? `<p class="hint" style="margin:6px 0 0;">No clock-in recorded — set one to add it.</p>` : ''}
         </div>
-        ${outLog ? `
         <div class="field">
           <label for="edit-out-time">Clock out</label>
-          <input type="datetime-local" id="edit-out-time" value="${isoToLocalInput(outLog.timestamp)}">
-        </div>` : `<p class="hint" style="margin:0 0 16px;">This entry is still in progress — there's no clock-out time to edit yet.</p>`}
+          <input type="datetime-local" id="edit-out-time" value="${outLog ? isoToLocalInput(outLog.timestamp) : ''}">
+          ${!outLog ? `<p class="hint" style="margin:6px 0 0;">No clock-out recorded — set one to add it, or leave blank to keep this in progress.</p>` : ''}
+        </div>
         <div id="edit-session-error" class="error-msg"></div>
         <div class="row">
           <button type="button" class="btn ghost" id="edit-session-cancel">Cancel</button>
@@ -1043,12 +1057,14 @@
     }).join("");
 
     // ---- hours summary: pair clock-ins with clock-outs, apply the same filters ----
+    // Falls back to outTime when inTime is missing (an orphaned clock-out).
+    const sessionAnchorTime = s => s.inTime || s.outTime;
     let sessions = computeSessions();
     if(filterStudent) sessions = sessions.filter(s => s.studentId === filterStudent);
     if(filterInternship) sessions = sessions.filter(s => s.internshipId === filterInternship);
-    if(filterFrom) sessions = sessions.filter(s => new Date(s.inTime) >= new Date(filterFrom));
-    if(filterTo) sessions = sessions.filter(s => new Date(s.inTime) <= new Date(filterTo+"T23:59:59"));
-    sessions.sort((a,b) => new Date(b.inTime) - new Date(a.inTime));
+    if(filterFrom) sessions = sessions.filter(s => new Date(sessionAnchorTime(s)) >= new Date(filterFrom));
+    if(filterTo) sessions = sessions.filter(s => new Date(sessionAnchorTime(s)) <= new Date(filterTo+"T23:59:59"));
+    sessions.sort((a,b) => new Date(sessionAnchorTime(b)) - new Date(sessionAnchorTime(a)));
 
     const totalHoursAll = sessions.reduce((sum,s) => sum + (s.hours || 0), 0);
 
@@ -1075,10 +1091,14 @@
       <tr>
         <td>${student ? escapeHtml(student.name) : "—"}</td>
         <td>${escapeHtml(s.internshipName)}${s.internshipOrg ? " · "+escapeHtml(s.internshipOrg) : ""}</td>
-        <td class="mono">${fmtDateTime(s.inTime)}</td>
+        <td class="mono">${s.inTime ? fmtDateTime(s.inTime) : "—"}</td>
         <td class="mono">${s.outTime ? fmtDateTime(s.outTime) : "—"}</td>
         <td class="mono">${formatDuration(s.hours)}</td>
-        <td style="text-align:right;"><button type="button" class="btn ghost btn-edit-session" data-in-log-id="${s.inLogId}" data-out-log-id="${s.outLogId || ''}" data-label="${escapeHtml(label)}" style="padding:4px 10px;font-size:12px;">Edit</button></td>
+        <td style="text-align:right;"><button type="button" class="btn ghost btn-edit-session"
+          data-in-log-id="${s.inLogId || ''}" data-out-log-id="${s.outLogId || ''}"
+          data-student-id="${s.studentId}" data-internship-id="${s.internshipId}"
+          data-internship-name="${escapeHtml(s.internshipName)}" data-internship-org="${escapeHtml(s.internshipOrg || '')}"
+          data-label="${escapeHtml(label)}" style="padding:4px 10px;font-size:12px;">${s.inLogId && s.outLogId ? 'Edit' : 'Edit / Add'}</button></td>
       </tr>`;
     }).join("");
 
@@ -1328,8 +1348,12 @@
     document.querySelectorAll('.btn-edit-session').forEach(btn => {
       btn.onclick = () => {
         editSession = {
-          inLogId: btn.dataset.inLogId,
+          inLogId: btn.dataset.inLogId || null,
           outLogId: btn.dataset.outLogId || null,
+          studentId: btn.dataset.studentId,
+          internshipId: btn.dataset.internshipId,
+          internshipName: btn.dataset.internshipName,
+          internshipOrg: btn.dataset.internshipOrg,
           label: btn.dataset.label
         };
         render();
@@ -1342,29 +1366,43 @@
     if($('edit-session-cancel')) $('edit-session-cancel').onclick = () => { editSession = null; render(); };
     if($('edit-session-save')) $('edit-session-save').onclick = () => {
       const inVal = $('edit-in-time').value;
-      const outInput = $('edit-out-time');
-      if(!inVal){
+      const outVal = $('edit-out-time').value;
+      // An existing entry can't be blanked out here — that's what Delete is for.
+      if(editSession.inLogId && !inVal){
         $('edit-session-error').textContent = "Clock-in time is required.";
         return;
       }
-      const inIso = localInputToIso(inVal);
-      let outIso = null;
-      if(outInput){
-        if(!outInput.value){
-          $('edit-session-error').textContent = "Clock-out time is required.";
-          return;
-        }
-        outIso = localInputToIso(outInput.value);
-        if(new Date(outIso) <= new Date(inIso)){
-          $('edit-session-error').textContent = "Clock-out must be after clock-in.";
-          return;
-        }
+      if(editSession.outLogId && !outVal){
+        $('edit-session-error').textContent = "Clock-out time is required.";
+        return;
       }
-      const inLog = DATA.logs.find(l => l.id === editSession.inLogId);
-      if(inLog) inLog.timestamp = inIso;
-      if(editSession.outLogId && outIso){
+      const inIso = inVal ? localInputToIso(inVal) : null;
+      const outIso = outVal ? localInputToIso(outVal) : null;
+      if(inIso && outIso && new Date(outIso) <= new Date(inIso)){
+        $('edit-session-error').textContent = "Clock-out must be after clock-in.";
+        return;
+      }
+      const newLog = (type, iso) => ({
+        id: uid('log'),
+        studentId: editSession.studentId,
+        internshipId: editSession.internshipId,
+        internshipName: editSession.internshipName,
+        internshipOrg: editSession.internshipOrg || "",
+        type,
+        timestamp: iso,
+        geo: { ok:false, error:"Added manually by admin" }
+      });
+      if(editSession.inLogId){
+        const inLog = DATA.logs.find(l => l.id === editSession.inLogId);
+        if(inLog) inLog.timestamp = inIso;
+      } else if(inIso){
+        DATA.logs.push(newLog('in', inIso));
+      }
+      if(editSession.outLogId){
         const outLog = DATA.logs.find(l => l.id === editSession.outLogId);
         if(outLog) outLog.timestamp = outIso;
+      } else if(outIso){
+        DATA.logs.push(newLog('out', outIso));
       }
       saveData();
       editSession = null;
@@ -1469,12 +1507,13 @@
     const filterFrom = session.filterFrom || "";
     const filterTo = session.filterTo || "";
 
+    const sessionAnchorTime = s => s.inTime || s.outTime;
     let sessions = computeSessions();
     if(filterStudent) sessions = sessions.filter(s => s.studentId === filterStudent);
     if(filterInternship) sessions = sessions.filter(s => s.internshipId === filterInternship);
-    if(filterFrom) sessions = sessions.filter(s => new Date(s.inTime) >= new Date(filterFrom));
-    if(filterTo) sessions = sessions.filter(s => new Date(s.inTime) <= new Date(filterTo+"T23:59:59"));
-    sessions.sort((a,b) => new Date(a.inTime) - new Date(b.inTime));
+    if(filterFrom) sessions = sessions.filter(s => new Date(sessionAnchorTime(s)) >= new Date(filterFrom));
+    if(filterTo) sessions = sessions.filter(s => new Date(sessionAnchorTime(s)) <= new Date(filterTo+"T23:59:59"));
+    sessions.sort((a,b) => new Date(sessionAnchorTime(a)) - new Date(sessionAnchorTime(b)));
 
     const csvEscape = (v) => {
       const s = String(v);
@@ -1492,7 +1531,7 @@
         student.rawId || s.studentId,
         s.internshipName,
         s.internshipOrg || "",
-        s.inTime,
+        s.inTime || "",
         s.outTime || "",
         s.hours != null ? s.hours.toFixed(2) : "in progress"
       ]));
