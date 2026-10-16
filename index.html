@@ -239,52 +239,7 @@
     font-size:13px;
     margin-top:10px;
   }
-  .geo-cell{
-    display:flex;
-    flex-direction:column;
-    gap:4px;
-  }
-  .geo-thumb-btn{
-    display:block;
-    padding:0;
-    border:1px solid var(--line);
-    border-radius:3px;
-    background:none;
-    cursor:pointer;
-    transition:border-color .15s ease;
-  }
-  .geo-thumb-btn:hover{border-color:var(--ink);}
-  .geo-thumb-frame{
-    position:relative;
-    display:block;
-    width:96px;
-    height:96px;
-    overflow:hidden;
-    border-radius:2px;
-    background:var(--line);
-  }
-  .geo-thumb{
-    display:block;
-    width:100%;
-    height:100%;
-    object-fit:cover;
-  }
-  .geo-thumb-pin{
-    position:absolute;
-    width:11px;height:11px;
-    transform:translate(-50%,-50%);
-    background:var(--danger);
-    border:2px solid #fff;
-    border-radius:50%;
-    box-shadow:0 1px 3px rgba(0,0,0,0.5);
-    pointer-events:none;
-  }
-  .geo-coords{
-    font-size:11px;
-    color:var(--ink-soft);
-  }
-
-  /* ---------- Modals (map preview, edit hours) ---------- */
+  /* ---------- Modals (edit hours) ---------- */
   .modal-overlay{
     position:fixed;
     inset:0;
@@ -304,12 +259,6 @@
     max-width:640px;
     position:relative;
     overflow:hidden;
-  }
-  .modal-box iframe{
-    width:100%;
-    height:420px;
-    border:0;
-    display:block;
   }
   .modal-box.form{
     max-width:420px;
@@ -381,11 +330,6 @@
     font-family:'Space Grotesk',sans-serif;
     font-weight:600;
     font-size:15px;
-  }
-  .stamp-result .coords{
-    font-size:12px;
-    color:var(--ink-soft);
-    margin-top:4px;
   }
 
   /* ---------- Internship picker ---------- */
@@ -491,7 +435,6 @@
 
   let DATA = null;               // { students:{}, logs:[], programInternships:[] }
   let session = null;            // { role:'student'|'admin', studentId, studentName, internshipId }
-  let mapModalGeo = null;        // { lat, lng } while a map preview modal is open, else null
   let editSession = null;        // { inLogId, outLogId, label } while the edit-hours modal is open, else null
   let editingInternshipId = null; // id of the internship whose row is in inline-edit mode, else null
   let loading = true;
@@ -601,38 +544,6 @@
   function localInputToIso(val){
     return new Date(val).toISOString();
   }
-  function fmtCoord(n){
-    return (typeof n === 'number') ? n.toFixed(5) : "—";
-  }
-  // Converts lat/lng to an OpenStreetMap slippy-map tile (x,y at the given
-  // zoom) plus the fractional pixel position within that tile, so we can
-  // hotlink the single raw tile as the thumbnail image and draw our own
-  // marker dot on top at the exact spot — no static-map API/key needed.
-  function latLngToTile(lat, lng, zoom){
-    const latRad = lat * Math.PI / 180;
-    const n = Math.pow(2, zoom);
-    const xf = (lng + 180) / 360 * n;
-    const yf = (1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 * n;
-    const x = Math.floor(xf);
-    const y = Math.floor(yf);
-    return { x, y, z: zoom, pctX: (xf - x) * 100, pctY: (yf - y) * 100 };
-  }
-  function renderGeoCell(geo){
-    if(!geo || !geo.ok) return "No location";
-    const t = latLngToTile(geo.lat, geo.lng, 16);
-    const tileUrl = `https://tile.openstreetmap.org/${t.z}/${t.x}/${t.y}.png`;
-    return `
-    <div class="geo-cell">
-      <button type="button" class="geo-thumb-btn" data-lat="${geo.lat}" data-lng="${geo.lng}" title="View larger map">
-        <span class="geo-thumb-frame">
-          <img class="geo-thumb" src="${tileUrl}" alt="Map preview near ${fmtCoord(geo.lat)}, ${fmtCoord(geo.lng)}" loading="lazy">
-          <span class="geo-thumb-pin" style="left:${t.pctX}%;top:${t.pctY}%;"></span>
-        </span>
-      </button>
-      <span class="geo-coords mono">${fmtCoord(geo.lat)}, ${fmtCoord(geo.lng)}</span>
-    </div>`;
-  }
-
   function formatDuration(hours){
     if(hours === null || hours === undefined) return "In progress";
     const h = Math.floor(hours);
@@ -707,25 +618,6 @@
     return sessions;
   }
 
-  function getGeolocation(){
-    return new Promise((resolve)=>{
-      if(!('geolocation' in navigator)){
-        resolve({ ok:false, error:"Geolocation not supported by this browser." });
-        return;
-      }
-      navigator.geolocation.getCurrentPosition(
-        (pos)=> resolve({
-          ok:true,
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-          accuracy: pos.coords.accuracy
-        }),
-        (err)=> resolve({ ok:false, error: err.message || "Location permission denied." }),
-        { enableHighAccuracy:true, timeout:10000, maximumAge:0 }
-      );
-    });
-  }
-
   // ---------- render root ----------
   function render(){
     const app = document.getElementById('app');
@@ -760,7 +652,6 @@
     } else if(session.role === 'admin'){
       html += renderAdmin();
     }
-    html += renderMapModal();
     html += renderEditSessionModal();
     app.innerHTML = html;
     attachHandlers();
@@ -781,7 +672,7 @@
         <div class="brand-mark">FB</div>
         <div>
           <h1>STHS Fieldbook</h1>
-          <span class="sub">Internship time &amp; location log</span>
+          <span class="sub">Internship time log</span>
         </div>
       </div>
       ${whoBlock}
@@ -790,23 +681,6 @@
 
   function escapeHtml(s){
     return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  }
-
-  // ---------- map preview modal ----------
-  // Uses OpenStreetMap's embeddable export view, so no API key/billing setup is needed.
-  function renderMapModal(){
-    if(!mapModalGeo) return '';
-    const { lat, lng } = mapModalGeo;
-    const dLat = 0.004, dLng = 0.006;
-    const bbox = `${lng-dLng},${lat-dLat},${lng+dLng},${lat+dLat}`;
-    const src = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&marker=${lat},${lng}`;
-    return `
-    <div class="modal-overlay" id="map-modal-overlay">
-      <div class="modal-box">
-        <button type="button" class="modal-close" id="map-modal-close" aria-label="Close map preview">×</button>
-        <iframe src="${src}" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
-      </div>
-    </div>`;
   }
 
   // ---------- edit-hours modal ----------
@@ -855,7 +729,7 @@
     <div class="role-grid">
       <div class="role-card primary" id="role-student">
         <h3>I'm interning</h3>
-        <p>Clock in and out of your placement. Your name, internship, and location get stamped into the log automatically.</p>
+        <p>Clock in and out of your placement. Your name and internship get stamped into the log automatically.</p>
       </div>
       <div class="role-card secondary" id="role-admin">
         <h3>I run the program</h3>
@@ -949,7 +823,6 @@
       <tr>
         <td class="mono">${fmtDateTime(l.timestamp)}</td>
         <td><span class="tag ${l.type}">${l.type === 'in' ? 'Clock in' : 'Clock out'}</span></td>
-        <td class="mono">${renderGeoCell(l.geo)}</td>
       </tr>`).join("");
 
     return `
@@ -969,8 +842,7 @@
           <span class="noun">tap to stamp</span>
         </button>
         <div class="stamp-result" id="stamp-result">
-          ${last ? `<div class="status">Last stamp: ${last.type === 'in' ? 'Clocked in' : 'Clocked out'} at ${fmtDateTime(last.timestamp)}</div>
-          <div class="coords">${renderGeoCell(last.geo)}</div>` : `<div class="status">No entries yet — this will be your first stamp.</div>`}
+          ${last ? `<div class="status">Last stamp: ${last.type === 'in' ? 'Clocked in' : 'Clocked out'} at ${fmtDateTime(last.timestamp)}</div>` : `<div class="status">No entries yet — this will be your first stamp.</div>`}
         </div>
       </div>
     </div>
@@ -984,7 +856,7 @@
       ${myLogs.length ? `
       <div class="table-scroll">
       <table class="ledger">
-        <thead><tr><th>Timestamp</th><th>Action</th><th>Location</th></tr></thead>
+        <thead><tr><th>Timestamp</th><th>Action</th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
       </div>` : `<div class="empty-state">Nothing logged yet for this internship.</div>`}
@@ -1036,8 +908,6 @@
         <td>${student ? escapeHtml(student.name) : "—"}</td>
         <td>${escapeHtml(l.internshipName)}${l.internshipOrg ? " · "+escapeHtml(l.internshipOrg) : ""}</td>
         <td><span class="tag ${l.type}">${l.type==='in'?'In':'Out'}</span></td>
-        <td class="mono">${renderGeoCell(l.geo)}</td>
-        <td class="mono">${l.geo && l.geo.ok ? Math.round(l.geo.accuracy)+"m" : "—"}</td>
         <td style="text-align:right;"><button class="btn ghost btn-remove-log" data-id="${l.id}" style="padding:4px 10px;font-size:12px;">Delete</button></td>
       </tr>`;
     }).join("");
@@ -1252,7 +1122,7 @@
       ${logs.length ? `
       <div class="table-scroll">
       <table class="ledger">
-        <thead><tr><th>Timestamp</th><th>Student</th><th>Internship</th><th>Action</th><th>Coordinates</th><th>Accuracy</th><th></th></tr></thead>
+        <thead><tr><th>Timestamp</th><th>Student</th><th>Internship</th><th>Action</th><th></th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
       </div>` : `<div class="empty-state">No entries match these filters yet.</div>`}
@@ -1356,8 +1226,7 @@
         internshipName: internship.name,
         internshipOrg: internship.org || "",
         type,
-        timestamp: iso,
-        geo: { ok:false, error:"Added manually by admin" }
+        timestamp: iso
       });
       DATA.logs.push(newLog('in', inIso));
       if(outIso) DATA.logs.push(newLog('out', outIso));
@@ -1425,17 +1294,6 @@
       };
     });
 
-    document.querySelectorAll('.geo-thumb-btn').forEach(btn => {
-      btn.onclick = () => {
-        mapModalGeo = { lat: parseFloat(btn.dataset.lat), lng: parseFloat(btn.dataset.lng) };
-        render();
-      };
-    });
-    if($('map-modal-overlay')) $('map-modal-overlay').onclick = (e) => {
-      if(e.target.id === 'map-modal-overlay'){ mapModalGeo = null; render(); }
-    };
-    if($('map-modal-close')) $('map-modal-close').onclick = () => { mapModalGeo = null; render(); };
-
     document.querySelectorAll('.btn-edit-session').forEach(btn => {
       btn.onclick = () => {
         editSession = {
@@ -1494,8 +1352,7 @@
         internshipName,
         internshipOrg,
         type,
-        timestamp: iso,
-        geo: { ok:false, error:"Added manually by admin" }
+        timestamp: iso
       });
       if(editSession.inLogId){
         const inLog = DATA.logs.find(l => l.id === editSession.inLogId);
@@ -1529,8 +1386,6 @@
       const action = btn.dataset.action;
       btn.disabled = true;
       const resultBox = $('stamp-result');
-      resultBox.innerHTML = `<div class="status">Getting your location…</div>`;
-      const geo = await getGeolocation();
       const student = DATA.students[session.studentId];
       const internship = DATA.programInternships.find(i => i.id === session.internshipId);
       const entry = {
@@ -1540,8 +1395,7 @@
         internshipName: internship.name,
         internshipOrg: internship.org || "",
         type: action,
-        timestamp: new Date().toISOString(),
-        geo: geo
+        timestamp: new Date().toISOString()
       };
       DATA.logs.push(entry);
       const ok = await saveData();
@@ -1585,7 +1439,7 @@
     if(filterTo) logs = logs.filter(l => new Date(l.timestamp) <= new Date(filterTo+"T23:59:59"));
     logs.sort((a,b)=> new Date(a.timestamp) - new Date(b.timestamp));
 
-    const header = ["Timestamp","Student Name","Student ID","Internship","Organization","Action","Latitude","Longitude","Accuracy (m)"];
+    const header = ["Timestamp","Student Name","Student ID","Internship","Organization","Action"];
     const rows = logs.map(l => {
       const student = DATA.students[l.studentId] || {};
       return [
@@ -1594,10 +1448,7 @@
         student.rawId || l.studentId,
         l.internshipName,
         l.internshipOrg || "",
-        l.type,
-        (l.geo && l.geo.ok) ? l.geo.lat : "",
-        (l.geo && l.geo.ok) ? l.geo.lng : "",
-        (l.geo && l.geo.ok) ? Math.round(l.geo.accuracy) : ""
+        l.type
       ];
     });
     const csvEscape = (v) => {
@@ -1691,8 +1542,7 @@
 
   document.addEventListener('keydown', (e) => {
     if(e.key !== 'Escape') return;
-    if(mapModalGeo){ mapModalGeo = null; render(); }
-    else if(editSession){ editSession = null; render(); }
+    if(editSession){ editSession = null; render(); }
   });
 
   // ---------- boot ----------
