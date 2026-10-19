@@ -52,8 +52,8 @@ CONNECT YOUR OWN DOMAIN
    domain".
 2. Enter your domain and follow Netlify's instructions to point your
    DNS at Netlify (either full nameservers or a CNAME/A record).
-3. Netlify auto-provisions free HTTPS once DNS verifies — required
-   here since browsers block geolocation access on non-HTTPS sites.
+3. Netlify auto-provisions free HTTPS once DNS verifies, which
+   keeps the site secure.
 
 HOW DATA SYNCS
 ----------------
